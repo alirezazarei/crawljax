@@ -1,12 +1,12 @@
 package com.crawljax.core.configuration;
 
+import javax.annotation.concurrent.Immutable;
+
 /**
  * Class for passing proxy settings to Crawljax' browser builder. It is returned by the
  * ProxyServerPlugin interface.
- * 
- * @author dannyroest@gmail.com (Danny Roest)
- * @version $Id$
  */
+@Immutable
 public class ProxyConfiguration {
 
 	/**
@@ -46,25 +46,49 @@ public class ProxyConfiguration {
 		}
 	}
 
-	public static final int DEFAULT_PORT = 1234;
+	/**
+	 * @see ProxyType#NOTHING
+	 */
+	public static ProxyConfiguration noProxy() {
+		return new ProxyConfiguration(-1, "none", ProxyType.NOTHING);
+	}
 
-	private int port = DEFAULT_PORT;
-	private String hostname = "localhost";
-	private ProxyType type = ProxyType.MANUAL;
+	/**
+	 * @see ProxyType#AUTOMATIC
+	 */
+	public static ProxyConfiguration automatic() {
+		return new ProxyConfiguration(-1, "none", ProxyType.AUTOMATIC);
+	}
+
+	/**
+	 * @see ProxyType#SYSTEM_DEFAULT
+	 */
+	public static ProxyConfiguration systemDefault() {
+		return new ProxyConfiguration(-1, "none", ProxyType.SYSTEM_DEFAULT);
+	}
+
+	/**
+	 * @see ProxyType#MANUAL
+	 */
+	public static ProxyConfiguration manualProxyOn(String host, int port) {
+		return new ProxyConfiguration(port, host, ProxyType.MANUAL);
+	}
+
+	private final int port;
+	private final String hostname;
+	private final ProxyType type;
+
+	private ProxyConfiguration(int port, String hostname, ProxyType type) {
+		this.port = port;
+		this.hostname = hostname;
+		this.type = type;
+	}
 
 	/**
 	 * @return The port.
 	 */
 	public int getPort() {
 		return port;
-	}
-
-	/**
-	 * @param port
-	 *            The port where the proxy is running on.
-	 */
-	public void setPort(int port) {
-		this.port = port;
 	}
 
 	/**
@@ -75,26 +99,19 @@ public class ProxyConfiguration {
 	}
 
 	/**
-	 * @param hostname
-	 *            The hostname of the proxy.
-	 */
-	public void setHostname(String hostname) {
-		this.hostname = hostname;
-	}
-
-	/**
-	 * @param type
-	 *            The proxy type. Currently only ProxyType.HTTP_PROXY is supported.
-	 */
-	public void setType(ProxyType type) {
-		this.type = type;
-	}
-
-	/**
 	 * @return The type.
 	 */
 	public ProxyType getType() {
 		return type;
 	}
 
+	@Override
+	public String toString() {
+		switch (type) {
+			case MANUAL:
+				return "Manual host: " + hostname + ":" + port;
+			default:
+				return type.toString();
+		}
+	}
 }

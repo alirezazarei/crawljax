@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.crawljax.core.configuration.BrowserConfiguration;
+
 /**
  * Main Executor inheriting {@link ThreadPoolExecutor} to implement the beforeExecute, afterExecute
  * and terminated. Every time a new Crawler is added to this Executor by its
@@ -18,9 +20,6 @@ import org.slf4j.LoggerFactory;
  * Threads will be reused, at most numberOfThreads will be created. The number of Crawlers active at
  * the same time will be the maximum of the number of Threads. If there are no more Threads left,
  * Crawlers will be stored in a workQueue until a Thread will become available.
- * 
- * @author Stefan Lenselink <S.R.Lenselink@student.tudelft.nl>
- * @version $Id$
  */
 public class CrawlerExecutor extends ThreadPoolExecutor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerExecutor.class);
@@ -47,15 +46,13 @@ public class CrawlerExecutor extends ThreadPoolExecutor {
 
 	/**
 	 * Default CrawlerExecutor. using the configured number of threads, no timeout a Stack as
-	 * workQueue to support Depth-first crawling and the local ThreadFactory.
-	 * 
-	 * @param numberOfThreads
-	 *            number of threads.
+	 * workQueue to support Depth-first crawling and the local ThreadFactory. It will have a minimum
+	 * pool size of the #browsers * 2, and a maximum of #browsers * 5.
 	 */
-	public CrawlerExecutor(int numberOfThreads) {
-		super(numberOfThreads, numberOfThreads, 0L, TimeUnit.MILLISECONDS, new CrawlQueue());
+	public CrawlerExecutor(BrowserConfiguration config) {
+		super(config.getNumberOfBrowsers() * 2, config.getNumberOfBrowsers() * 5, 0L,
+		        TimeUnit.MILLISECONDS, new CrawlQueue());
 		setThreadFactory(new CrawlerThreadFactory());
-		// setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
 	}
 
 	@Override
@@ -64,9 +61,8 @@ public class CrawlerExecutor extends ThreadPoolExecutor {
 		if (t != null) {
 			LOGGER.error("Finished unsuccesfully", t);
 		}
-		LOGGER.info("Finished executing");
+		LOGGER.debug("Finished executing");
 		if (runningTasks.decrementAndGet() == 0 && getQueue().isEmpty()) {
-			// runningTasks--;
 			/**
 			 * As the number of running tasks equals 0 there are no tasks running anymore. A new
 			 * task can only be added by a Crawler which happens before the run function exits so if
@@ -81,7 +77,6 @@ public class CrawlerExecutor extends ThreadPoolExecutor {
 	@Override
 	protected void beforeExecute(Thread t, Runnable r) {
 		super.beforeExecute(t, r);
-		// runningTasks++;
 		runningTasks.incrementAndGet();
 
 		/**

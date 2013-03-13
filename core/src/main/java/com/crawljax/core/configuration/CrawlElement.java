@@ -1,11 +1,13 @@
 package com.crawljax.core.configuration;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.crawljax.condition.Condition;
 import com.crawljax.condition.eventablecondition.EventableCondition;
 import com.crawljax.core.state.Eventable.EventType;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 /**
  * Represents the HTML elements which should be crawled. It represents all the HTML elements in the
@@ -29,17 +31,17 @@ import com.crawljax.core.state.Eventable.EventType;
  * 
  * @see CrawlSpecification
  * @author DannyRoest@gmail.com (Danny Roest)
- * @version $Id$
  */
 public final class CrawlElement {
 
-	private String tagName;
-	private final List<CrawlAttribute> crawlAttributes = new ArrayList<CrawlAttribute>();
-	private final List<Condition> conditions = new ArrayList<Condition>();
+	private final String tagName;
+	private final List<CrawlAttribute> crawlAttributes = Lists.newLinkedList();
+	private final List<Condition> conditions = Lists.newLinkedList();
 	private final String id;
-	private String underXpath;
-	private List<String> inputFieldIds = new ArrayList<String>();
 	private final EventType eventType;
+	private final List<String> inputFieldIds = Lists.newLinkedList();
+
+	private String underXpath;
 
 	/**
 	 * To create a CrawlElement representing an HTML element <a>MyLink</a> the tag name would be
@@ -48,9 +50,24 @@ public final class CrawlElement {
 	 * @param eventType
 	 *            the event type for this crawl element.
 	 */
-	protected CrawlElement(EventType eventType) {
+	protected CrawlElement(EventType eventType, String tagName) {
+		this.tagName = tagName.toUpperCase();
 		this.id = "id" + hashCode();
 		this.eventType = eventType;
+	}
+
+	/**
+	 * Crawljax will crawl the HTML elements while crawling if and only if all the specified
+	 * conditions are satisfied. IMPORTANT: only works with click()!!! For example:
+	 * when(onContactPageCondition) will only click the HTML element if it is on the contact page
+	 * 
+	 * @param conditions
+	 *            the condition to be met.
+	 * @return this
+	 */
+	public CrawlElement when(Condition... conditions) {
+		this.conditions.addAll(Arrays.asList(conditions));
+		return this;
 	}
 
 	/**
@@ -107,21 +124,11 @@ public final class CrawlElement {
 	}
 
 	/**
-	 * Set name of the tag.
-	 * 
-	 * @param tagName
-	 *            Name of the tag.
-	 */
-	protected void setTagName(String tagName) {
-		this.tagName = tagName;
-	}
-
-	/**
 	 * @return the EventableCondition belonging to this CrawlElement
 	 */
-	protected EventableCondition getEventableCondition() {
+	public EventableCondition getEventableCondition() {
 		if ((getWithXpathExpression() == null || getWithXpathExpression().equals(""))
-		        && getConditions().size() == 0 && getInputFieldIds().size() == 0) {
+		        && getConditions().isEmpty() && getInputFieldIds().isEmpty()) {
 			return null;
 		}
 		EventableCondition eventableCondition = new EventableCondition(getId());
@@ -139,24 +146,43 @@ public final class CrawlElement {
 
 	@Override
 	public String toString() {
-		StringBuffer ret = new StringBuffer(getTagName() + ":{");
-		int i = 0;
-		for (CrawlAttribute crawlAttribute : getCrawlAttributes()) {
-			if (i > 0) {
-				ret.append("; ");
-			}
-			i++;
-			ret.append(crawlAttribute.getName());
-			ret.append("=");
-			ret.append(crawlAttribute.getValue());
+		StringBuilder builder = new StringBuilder("CrawlElement [");
+		if (tagName != null) {
+			builder.append("tagName=");
+			builder.append(tagName);
+			builder.append(", ");
 		}
-		ret.append("}");
-		if (getId() != null && !getId().equals("")) {
-			ret.append("[");
-			ret.append(getId());
-			ret.append("]");
+		if (crawlAttributes != null && !crawlAttributes.isEmpty()) {
+			builder.append("crawlAttributes=");
+			builder.append(crawlAttributes);
+			builder.append(", ");
 		}
-		return ret.toString();
+		if (conditions != null && !conditions.isEmpty()) {
+			builder.append("conditions=");
+			builder.append(conditions);
+			builder.append(", ");
+		}
+		if (id != null) {
+			builder.append("id=");
+			builder.append(id);
+			builder.append(", ");
+		}
+		if (underXpath != null) {
+			builder.append("underXpath=");
+			builder.append(underXpath);
+			builder.append(", ");
+		}
+		if (inputFieldIds != null && !inputFieldIds.isEmpty()) {
+			builder.append("inputFieldIds=");
+			builder.append(inputFieldIds);
+			builder.append(", ");
+		}
+		if (eventType != null) {
+			builder.append("eventType=");
+			builder.append(eventType);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 
 	/**
@@ -179,8 +205,8 @@ public final class CrawlElement {
 	/**
 	 * @return the crawlAttributes
 	 */
-	protected List<CrawlAttribute> getCrawlAttributes() {
-		return crawlAttributes;
+	public ImmutableList<CrawlAttribute> getCrawlAttributes() {
+		return ImmutableList.copyOf(crawlAttributes);
 	}
 
 	/**
@@ -194,21 +220,21 @@ public final class CrawlElement {
 	/**
 	 * @return the id
 	 */
-	protected String getId() {
+	public String getId() {
 		return id;
 	}
 
 	/**
 	 * @return The tag name.
 	 */
-	protected String getTagName() {
+	public String getTagName() {
 		return tagName;
 	}
 
 	/**
 	 * @return the withXpathExpression
 	 */
-	protected String getWithXpathExpression() {
+	public String getWithXpathExpression() {
 		return underXpath;
 	}
 
@@ -227,23 +253,23 @@ public final class CrawlElement {
 	/**
 	 * @return the conditions
 	 */
-	protected List<Condition> getConditions() {
-		return conditions;
+	protected ImmutableList<Condition> getConditions() {
+		return ImmutableList.copyOf(conditions);
 	}
 
 	/**
 	 * @return the inputFieldIds
 	 */
-	protected List<String> getInputFieldIds() {
-		return inputFieldIds;
+	protected ImmutableList<String> getInputFieldIds() {
+		return ImmutableList.copyOf(inputFieldIds);
 	}
 
 	/**
 	 * @param ids
 	 *            Sets the list of input field ids.
 	 */
-	protected void setInputFieldIds(List<String> ids) {
-		inputFieldIds = ids;
+	protected void addInputFieldIds(List<String> ids) {
+		inputFieldIds.addAll(ids);
 	}
 
 	/**

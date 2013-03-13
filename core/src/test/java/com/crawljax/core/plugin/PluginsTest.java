@@ -1,7 +1,9 @@
 package com.crawljax.core.plugin;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.lessThan;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -14,6 +16,8 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.crawljax.browser.EmbeddedBrowser;
 import com.crawljax.condition.NotRegexCondition;
@@ -22,9 +26,8 @@ import com.crawljax.core.CandidateElement;
 import com.crawljax.core.CrawlSession;
 import com.crawljax.core.CrawljaxController;
 import com.crawljax.core.CrawljaxException;
-import com.crawljax.core.configuration.CrawlSpecification;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
-import com.crawljax.core.configuration.CrawljaxConfigurationReader;
+import com.crawljax.core.configuration.CrawljaxConfiguration.CrawljaxConfigurationBuilder;
 import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.StateMachine;
 import com.crawljax.core.state.StateVertex;
@@ -38,6 +41,7 @@ import com.google.common.collect.Maps;
 @Category(BrowserTest.class)
 public class PluginsTest {
 
+	private static final Logger LOG = LoggerFactory.getLogger(PluginsTest.class);
 	private static CrawljaxController controller;
 	private static CrawljaxConfiguration config;
 
@@ -52,7 +56,7 @@ public class PluginsTest {
 	private static void registerPlugin(Class<? extends Plugin> p) {
 
 		if (pluginTimes.get(p) == null) {
-			System.out.println("Register: " + p);
+			LOG.debug("Register: " + p);
 			pluginTimes.put(p, System.currentTimeMillis());
 		}
 	}
@@ -73,27 +77,22 @@ public class PluginsTest {
 
 	@BeforeClass
 	public static void setup() throws ConfigurationException {
-		CrawlSpecification spec = new CrawlSpecification(SERVER.getSiteUrl().toExternalForm());
-		spec.clickDefaultElements();
+		CrawljaxConfigurationBuilder builder = SERVER.newConfigBuilder();
+
+		builder.crawlRules().clickDefaultElements();
 
 		/**
 		 * Add a sample Invariant for testing the OnInvariantViolation plugin
 		 */
-		spec.addInvariant("Never contain Final state S8", new NotRegexCondition("Final state S2"));
-
-		config = new CrawljaxConfiguration();
+		builder.crawlRules().addInvariant("Never contain Final state S8",
+		        new NotRegexCondition("Final state S2"));
 
 		/**
 		 * Add a empty proxy from running the ProxyConfigurationPlugin
 		 */
 		// config.setProxyConfiguration(new ProxyConfiguration());
 
-		config.setCrawlSpecification(spec);
-
-		/**
-		 * NewState
-		 */
-		config.addPlugin(new OnNewStatePlugin() {
+		builder.addPlugin(new OnNewStatePlugin() {
 			@Override
 			public void onNewState(CrawlSession session) {
 				registerPlugin(OnNewStatePlugin.class);
@@ -106,10 +105,7 @@ public class PluginsTest {
 			}
 		});
 
-		/**
-		 * GuidedCrawling
-		 */
-		config.addPlugin(new GuidedCrawlingPlugin() {
+		builder.addPlugin(new GuidedCrawlingPlugin() {
 
 			@Override
 			public void guidedCrawling(StateVertex currentState, CrawljaxController controller,
@@ -122,10 +118,7 @@ public class PluginsTest {
 			}
 		});
 
-		/**
-		 * BrowserCreated
-		 */
-		config.addPlugin(new OnBrowserCreatedPlugin() {
+		builder.addPlugin(new OnBrowserCreatedPlugin() {
 
 			@Override
 			public void onBrowserCreated(EmbeddedBrowser newBrowser) {
@@ -134,10 +127,7 @@ public class PluginsTest {
 			}
 		});
 
-		/**
-		 * InvariantViolation
-		 */
-		config.addPlugin(new OnInvariantViolationPlugin() {
+		builder.addPlugin(new OnInvariantViolationPlugin() {
 
 			@Override
 			public void onInvariantViolation(Invariant invariant, CrawlSession session) {
@@ -148,10 +138,7 @@ public class PluginsTest {
 			}
 		});
 
-		/**
-		 * UrlLoad
-		 */
-		config.addPlugin(new OnUrlLoadPlugin() {
+		builder.addPlugin(new OnUrlLoadPlugin() {
 
 			@Override
 			public void onUrlLoad(EmbeddedBrowser browser) {
@@ -160,10 +147,7 @@ public class PluginsTest {
 			}
 		});
 
-		/**
-		 * PostCrawling
-		 */
-		config.addPlugin(new PostCrawlingPlugin() {
+		builder.addPlugin(new PostCrawlingPlugin() {
 
 			@Override
 			public void postCrawling(CrawlSession session) {
@@ -172,10 +156,7 @@ public class PluginsTest {
 			}
 		});
 
-		/**
-		 * PreCrawling
-		 */
-		config.addPlugin(new PreCrawlingPlugin() {
+		builder.addPlugin(new PreCrawlingPlugin() {
 
 			@Override
 			public void preCrawling(EmbeddedBrowser browser) {
@@ -184,10 +165,7 @@ public class PluginsTest {
 			}
 		});
 
-		/**
-		 * PreStateCrawling
-		 */
-		config.addPlugin(new PreStateCrawlingPlugin() {
+		builder.addPlugin(new PreStateCrawlingPlugin() {
 
 			@Override
 			public void preStateCrawling(CrawlSession session,
@@ -214,10 +192,7 @@ public class PluginsTest {
 			}
 		});
 
-		/**
-		 * RevisitState
-		 */
-		config.addPlugin(new OnRevisitStatePlugin() {
+		builder.addPlugin(new OnRevisitStatePlugin() {
 
 			@Override
 			public void onRevisitState(CrawlSession session, StateVertex currentState) {
@@ -227,6 +202,7 @@ public class PluginsTest {
 			}
 		});
 
+		config = builder.build();
 		controller = new CrawljaxController(config);
 	}
 
@@ -235,27 +211,27 @@ public class PluginsTest {
 		try {
 
 			controller.run();
-			assertEquals(new CrawljaxConfigurationReader(config).getPlugins().size(),
-			        pluginTimes.size());
+			assertThat(config.getPlugins(), hasSize(pluginTimes.size()));
 
 			// Can not test the relation OnBrowserCreatedPlugin vs. PreCrawlingPlugin
 			// assertTrue(pluginTimes.get(OnBrowserCreatedPlugin.class)
 			// == pluginTimes.get(PreCrawlingPlugin.class));
-			assertTrue(pluginTimes.get(PreCrawlingPlugin.class) < pluginTimes
-			        .get(OnUrlLoadPlugin.class));
-			assertTrue(pluginTimes.get(OnUrlLoadPlugin.class) < pluginTimes
-			        .get(OnNewStatePlugin.class));
-			assertTrue(pluginTimes.get(OnNewStatePlugin.class) < pluginTimes
-			        .get(PreStateCrawlingPlugin.class));
-			assertTrue(pluginTimes.get(PreStateCrawlingPlugin.class) < pluginTimes
-			        .get(GuidedCrawlingPlugin.class));
-			assertTrue(pluginTimes.get(GuidedCrawlingPlugin.class) < pluginTimes
-			        .get(OnRevisitStatePlugin.class));
-			assertTrue(pluginTimes.get(OnRevisitStatePlugin.class) < pluginTimes
-			        .get(OnInvariantViolationPlugin.class));
+			assertOrder(PreCrawlingPlugin.class, OnUrlLoadPlugin.class);
+			assertOrder(OnUrlLoadPlugin.class, OnNewStatePlugin.class);
+			assertOrder(OnNewStatePlugin.class, PreStateCrawlingPlugin.class);
+			assertOrder(PreStateCrawlingPlugin.class, GuidedCrawlingPlugin.class);
+			assertOrder(GuidedCrawlingPlugin.class, OnRevisitStatePlugin.class);
+			assertOrder(OnRevisitStatePlugin.class, OnInvariantViolationPlugin.class);
+
 		} finally {
 			controller.terminate(true);
 		}
+	}
+
+	public void assertOrder(Class<? extends Plugin> first, Class<? extends Plugin> last) {
+		assertThat(first.getSimpleName() + " should come before " + last.getSimpleName(),
+		        pluginTimes.get(first), lessThan(pluginTimes
+		                .get(last)));
 	}
 
 	@AfterClass

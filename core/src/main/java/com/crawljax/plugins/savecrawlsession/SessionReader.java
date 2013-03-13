@@ -1,10 +1,10 @@
 package com.crawljax.plugins.savecrawlsession;
 
 import java.io.FileNotFoundException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.crawljax.core.configuration.CrawlSpecification;
 import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.StateFlowGraph;
 import com.crawljax.core.state.StateVertex;
@@ -13,7 +13,6 @@ import com.crawljax.core.state.StateVertex;
  * Reader class for saved crawl sessions.
  * 
  * @author dannyroest@gmail.com (Danny Roest)
- * @version $id$
  */
 public class SessionReader {
 
@@ -71,20 +70,20 @@ public class SessionReader {
 		return paths;
 	}
 
-	/**
-	 * @return the CrawlSpecification from the saved CrawlSession
-	 */
-	public CrawlSpecification getCrawlSpecification() {
-		CrawlSpecification spec = new CrawlSpecification(savedCrawlSession.getUrl());
-		spec.setMaximumStates(savedCrawlSession.getMapStates().size());
-		spec.clickDefaultElements();
-		return spec;
-	}
+	// /**
+	// * @return the CrawlSpecification from the saved CrawlSession
+	// */
+	// public CrawlSpecification getCrawlSpecification() {
+	// CrawlSpecification spec = new CrawlSpecification(savedCrawlSession.getUrl());
+	// spec.setMaximumStates(savedCrawlSession.getMapStates().size());
+	// spec.clickDefaultElements();
+	// return spec;
+	// }
 
 	/**
 	 * @return the crawled url from the saved CrawlSession
 	 */
-	public String getCrawlUrl() {
+	public URL getCrawlUrl() {
 		return savedCrawlSession.getUrl();
 	}
 }

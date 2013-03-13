@@ -4,7 +4,6 @@ package com.crawljax.core.configuration;
  * Specifies attribute for CrawlElements. Internal use only.
  * 
  * @author DannyRoest@gmail.com (Danny Roest)
- * @version $Id$
  */
 public class CrawlAttribute {
 
@@ -32,14 +31,14 @@ public class CrawlAttribute {
 	/**
 	 * @return the name
 	 */
-	protected String getName() {
+	public String getName() {
 		return name;
 	}
 
 	/**
 	 * @return the value
 	 */
-	protected String getValue() {
+	public String getValue() {
 		return value;
 	}
 

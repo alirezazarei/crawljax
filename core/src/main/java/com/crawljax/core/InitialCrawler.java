@@ -17,7 +17,6 @@ import com.crawljax.core.state.StateVertex;
  * state and builds a session object and resumes the normal operations.
  * 
  * @author Stefan Lenselink <S.R.Lenselink@student.tudelft.nl>
- * @version $Id$
  */
 
 public class InitialCrawler extends Crawler {
@@ -85,7 +84,7 @@ public class InitialCrawler extends Crawler {
 		 */
 		CrawlSession session =
 		        new CrawlSession(controller.getBrowserPool(), stateFlowGraph, indexState,
-		                controller.getStartCrawl(), controller.getConfigurationReader());
+		                controller.getStartCrawl(), controller.getConfiguration());
 		controller.setSession(session);
 
 		/**

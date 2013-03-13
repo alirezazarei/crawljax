@@ -1,12 +1,14 @@
 package com.crawljax.crawltests;
 
+import com.crawljax.core.configuration.CrawljaxConfiguration.CrawljaxConfigurationBuilder;
 import com.crawljax.core.configuration.InputField;
 import com.crawljax.core.configuration.InputSpecification;
+import com.crawljax.test.BaseCrawler;
 
 /**
  * Wraps a Crawljax instance the crawls the simplesite.
  */
-public class SimpleInputSiteCrawl extends SampleCrawler {
+public class SimpleInputSiteCrawl extends BaseCrawler {
 
 	public static final int NUMBER_OF_STATES = 2;
 	public static final int NUMBER_OF_EDGES = 1;
@@ -16,9 +18,10 @@ public class SimpleInputSiteCrawl extends SampleCrawler {
 	}
 
 	@Override
-	public void setup() throws Exception {
-		super.setup();
-		getCrawlSpec().setInputSpecification(getInputSpecification());
+	protected CrawljaxConfigurationBuilder newCrawlConfiguartionBuilder() {
+		CrawljaxConfigurationBuilder builder = super.newCrawlConfiguartionBuilder();
+		builder.crawlRules().setInputSpec(getInputSpecification());
+		return builder;
 	}
 
 	/**

@@ -6,14 +6,17 @@ package com.crawljax.util;
 import junit.framework.TestCase;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Test the edit distance algorithm.
  * 
  * @author mesbah
- * @version $Id$
  */
 public class EditDistanceTest extends TestCase {
+
+	private static final Logger LOG = LoggerFactory.getLogger(EditDistanceTest.class);
 
 	/**
 	 * Check if threshold calculation works.
@@ -35,7 +38,7 @@ public class EditDistanceTest extends TestCase {
 		String x = "<form>BL</form>";
 		String y = "<form>blabla</form>";
 
-		System.out.println(StringUtils.getLevenshteinDistance(x, y) + " Thesh: "
+		LOG.debug(StringUtils.getLevenshteinDistance(x, y) + " Thesh: "
 		        + EditDistance.getThreshold(x, y, 0.7));
 		assertTrue(EditDistance.isClone(x, y, 0.0));
 		assertTrue(EditDistance.isClone(x, y, 0.5));

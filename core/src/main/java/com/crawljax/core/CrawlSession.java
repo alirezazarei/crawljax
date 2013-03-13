@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.crawljax.browser.BrowserPool;
 import com.crawljax.browser.EmbeddedBrowser;
-import com.crawljax.core.configuration.CrawljaxConfigurationReader;
+import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.state.CrawlPath;
 import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.StateFlowGraph;
@@ -19,7 +19,6 @@ import com.crawljax.core.state.StateVertex;
  * The data about the crawlsession.
  * 
  * @author mesbah
- * @version $Id$
  */
 public class CrawlSession {
 
@@ -43,7 +42,7 @@ public class CrawlSession {
 	/**
 	 * Variable for reading the Configuration from.
 	 */
-	private final CrawljaxConfigurationReader crawljaxConfiguration;
+	private final CrawljaxConfiguration crawljaxConfiguration;
 
 	/**
 	 * Denote the time the CrawlSession Started in ms since 1970.
@@ -98,7 +97,7 @@ public class CrawlSession {
 	 *            the configuration.
 	 */
 	public CrawlSession(BrowserPool pool, StateFlowGraph stateFlowGraph, StateVertex state,
-	        long startTime, CrawljaxConfigurationReader crawljaxConfiguration) {
+	        long startTime, CrawljaxConfiguration crawljaxConfiguration) {
 		this.crawljaxConfiguration = crawljaxConfiguration;
 		this.browserPool = pool;
 		this.stateFlowGraph = stateFlowGraph;
@@ -160,7 +159,7 @@ public class CrawlSession {
 	/**
 	 * @return the crawljaxConfiguration
 	 */
-	public CrawljaxConfigurationReader getCrawljaxConfiguration() {
+	public CrawljaxConfiguration getCrawljaxConfiguration() {
 		return crawljaxConfiguration;
 	}
 
