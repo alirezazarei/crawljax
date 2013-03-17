@@ -5,14 +5,8 @@ package com.crawljax.core.state;
 
 import static org.junit.Assert.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.Set;
 
-import scala.annotation.target.setter;
 
 import com.crawljax.core.CrawlSession;
 import com.crawljax.core.CrawljaxController;
@@ -30,18 +24,47 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.*;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 /**
  * @author arz
  *
  */
-public class StateFlowGraphTestDB {
+public class StateStorageRetrieval {
 	
 	
 	
 	private static final String URL = "http://www.google.com";
 	private static final int MAX_DEPTH = 2;
 	private static final int MAX_NUMBER_STATES = 2;
+	
+	private GraphDatabaseService sfgDb ;
+
+	
+	private static enum RelTypes implements RelationshipType
+	{
+		TRANSITIONS_TO	    
+	}
+	
+	private static void registerShutdownHook( final GraphDatabaseService graphDatabaseService )
+	{
+	    // Registering a shutdown hook for the db instance so as to
+	    // shut it down nicely when the VM exits 
+		
+	    Runtime.getRuntime().addShutdownHook( new Thread()
+	    {
+	        @Override
+	        public void run()
+	        {
+	            graphDatabaseService.shutdown();
+	        }
+	    } );
+	}
+
 
 
 	/**
@@ -63,6 +86,26 @@ public class StateFlowGraphTestDB {
 	 */
 	@Before
 	public void setUp() throws Exception {
+		
+
+		// The directory path for saving the graph-db created by neo4j for persisting the state flow graph 
+		
+		 String DB_PATH = "target/state-flow-graph-db";
+	
+		// the relationship between a source vertex and the destination vertex
+		
+		
+		
+		  
+			sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+			
+			// adding a shutdown hook to ensure the db will be shut down even if 
+			// the program breaks
+			
+			registerShutdownHook(sfgDb);
+
+			
+
 	}
 
 	/**
@@ -111,13 +154,6 @@ public class StateFlowGraphTestDB {
 		return input;
 	}
 
-	/**
-	 * Test method for {@link com.crawljax.core.state.StateFlowGraph#deserializeStateVertex(java.lang.String)}.
-	 */
-	@Test
-	public void testDeserializeStateVertex() {
-//		fail("Not yet implemented"); // TODO
-	}
 	
 	
 	private class StateExaminner implements OnNewStatePlugin {
@@ -135,7 +171,45 @@ public class StateFlowGraphTestDB {
 				
 				byte [] serializedSV = StateFlowGraph.serializeStateVertex(s);
 				
-				StateVertex after =  (StateVertex) StateFlowGraph.deserializeStateVertex(serializedSV);
+				Node firstNode ;
+				
+				Transaction tx = sfgDb.beginTx();
+				try
+				{
+				    // Updating operations go here
+					
+					firstNode = sfgDb.createNode();
+					firstNode.setProperty( "state", serializedSV );
+					 
+//					relationship = firstNode.createRelationshipTo( secondNode, RelTypes.TRANSITIONS_TO );
+//					relationship.setProperty( "message", "brave Neo4j " );
+
+				    tx.success();
+				}
+				finally
+				{
+				    tx.finish();
+				}
+				
+				byte [] afterDb;
+				
+				Transaction tx2 = sfgDb.beginTx();
+				try
+				{
+				   
+					afterDb = (byte[]) firstNode.getProperty("state");
+					
+				    tx2.success();
+				}
+				finally
+				{
+				    tx2.finish();
+				}
+
+				
+				
+				
+				StateVertex after =  (StateVertex) StateFlowGraph.deserializeStateVertex(afterDb);
 				
 				assertTrue(after.toString(), s.equals(after));
 				

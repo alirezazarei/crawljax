@@ -29,7 +29,6 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import scala.util.parsing.combinator.testing.Str;
 
 import com.google.common.base.Preconditions;
 
@@ -44,29 +43,17 @@ public class StateFlowGraph implements Serializable {
 	
 	// The directory path for saving the graph-db created by neo4j for persisting the state flow graph 
 	
-	private static final String DB_PATH = "target/state-flow-graph-db";
-
-	// the relationship between a source vertex and the destination vertex
-	
-	private static enum RelTypes implements RelationshipType
-	{
-		TRANSITIONS_TO	    
-	}
-	
-	private static GraphDatabaseService sfgDb ;
-	
-	private static void createDb(){
-		
-		// creating the graph db
-		
-		sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
-		
-		// adding a shutdown hook to ensure the db will be shut down even if 
-		// the program breaks
-		
-		registerShutdownHook(sfgDb);
-	}
-	
+//	private static final String DB_PATH = "target/state-flow-graph-db";
+//
+//	// the relationship between a source vertex and the destination vertex
+//	
+//	private static enum RelTypes implements RelationshipType
+//	{
+//		TRANSITIONS_TO	    
+//	}
+//	
+//	private  GraphDatabaseService sfgDb ;
+//		
 	private static void registerShutdownHook( final GraphDatabaseService graphDatabaseService )
 	{
 	    // Registering a shutdown hook for the db instance so as to
@@ -171,7 +158,22 @@ public class StateFlowGraph implements Serializable {
 	 */
 	public StateFlowGraph(StateVertex initialState) {
 		Preconditions.checkNotNull(initialState);
+		
+
+		// creating the graph db
+		
+//		sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+//		
+//		// adding a shutdown hook to ensure the db will be shut down even if 
+//		// the program breaks
+//		
+//		registerShutdownHook(sfgDb);
+//		
+
 		sfg = new DirectedMultigraph<>(Eventable.class);
+//		
+//		// add the first node to the graph
+		
 		sfg.addVertex(initialState);
 		this.initialState = initialState;
 	}
