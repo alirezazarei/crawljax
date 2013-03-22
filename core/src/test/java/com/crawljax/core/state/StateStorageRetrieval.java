@@ -1,5 +1,8 @@
 /**
- * 
+ * This test case checks whether we could write a single state into the graph database.
+ * It crawls google for a maximum of two states and it utilizes an "on new state" plug in to get the state flow graph. Then it extracts the first state and
+ * persists it by converting the whole state object into a byte array. Then it writes the byte array into the database. Afterward it retrieves the state from the database and 
+ * deserialize it. Then it compares the deserialized state to the original state and assert if they are equal. 
  */
 package com.crawljax.core.state;
 

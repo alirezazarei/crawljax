@@ -1,5 +1,5 @@
 /**
- * 
+ *	testing serialize and deserialize methods of the class stateflow graph 
  */
 package com.crawljax.core.state;
 
