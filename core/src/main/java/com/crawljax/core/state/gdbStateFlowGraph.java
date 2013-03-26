@@ -22,10 +22,13 @@ import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.alg.KShortestPaths;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.*;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.index.Index;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,26 +37,94 @@ import com.google.common.base.Preconditions;
 
 /**
  * The State-Flow Graph is a multi-edge directed graph with states (StateVetex) on the vertices and
- * clickables (Eventable) on the edges.
+ * clickables (Eventable) on the edges. It stores the data in a graph database.
  */
-@SuppressWarnings("serial")
-public class StateFlowGraph implements Serializable {
 
-	private static final Logger LOG = LoggerFactory.getLogger(StateFlowGraph.class.getName());
+public class gdbStateFlowGraph implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private static final Logger LOG = LoggerFactory.getLogger(gdbStateFlowGraph.class.getName());
 	
 	// The directory path for saving the graph-db created by neo4j for persisting the state flow graph 
 	
-//	private static final String DB_PATH = "target/state-flow-graph-db";
-//
-//	// the relationship between a source vertex and the destination vertex
-//	
-//	private static enum RelTypes implements RelationshipType
-//	{
-//		TRANSITIONS_TO	    
-//	}
-//	
-//	private  GraphDatabaseService sfgDb ;
+	private static final String DB_PATH = "target/state-flow-graph-db";
+	
+    private static final String STATE_KEY = "state";
+    
+    private static final String NODES_INDEX = "nodes";
+    private static final String EDGES_INDEX = "edges";
 
+	private static final String DOM_KEY = "DOM";
+    
+    private static Index<Node> nodeIndex;
+    
+    private static Index<Relationship> edgesIndex;
+
+
+
+    
+	/**
+	 * The constructor.
+	 * 
+	 * @param initialState
+	 *            the state to start from.
+	 */
+	public gdbStateFlowGraph(StateVertex initialState) {
+
+		Preconditions.checkNotNull(initialState);
+		
+		// creating the graph db
+		
+		sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+		
+	    
+		nodeIndex = sfgDb.index().forNodes( NODES_INDEX);
+		
+		edgesIndex = sfgDb.index().forRelationships(EDGES_INDEX);
+		
+	      
+		
+		
+
+		
+		// add the first node to the graph
+		this.addState2(initialState);
+		
+		this.initialState = initialState;
+		
+		
+		
+		
+		// adding a shutdown hook to ensure the db will be shut down even if 
+		// the program breaks
+		
+		registerShutdownHook(sfgDb);
+
+	}
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// the relationship between a source vertex and the destination vertex
+	
+	private static enum RelTypes implements RelationshipType
+	{
+		TRANSITIONS_TO	    
+	}
+	
+	  private final GraphDatabaseService sfgDb ;
+		
 	private static void registerShutdownHook( final GraphDatabaseService graphDatabaseService )
 	{
 	    // Registering a shutdown hook for the db instance so as to
@@ -120,7 +191,7 @@ public class StateFlowGraph implements Serializable {
 		
 			deserializedSV = (StateVertex) ois.readObject();
 			
-			// clsoing streams
+			// Closing streams
 			
 			ois.close();
 			bais.close();
@@ -140,7 +211,7 @@ public class StateFlowGraph implements Serializable {
 		
 	}
 	
-	private final DirectedGraph<StateVertex, Eventable> sfg;
+	private final DirectedGraph<StateVertex, Eventable> sfg = null;// null added
 
 	/**
 	 * Intermediate counter for the number of states, not relaying on getAllStates.size() because of
@@ -149,40 +220,75 @@ public class StateFlowGraph implements Serializable {
 	private final AtomicInteger stateCounter = new AtomicInteger();
 
 	private final StateVertex initialState;
+	
+	public StateVertex addState2(StateVertex stateVertix) {
+		return addState2(stateVertix, true);
+	}
 
-	/**
-	 * The constructor.
-	 * 
-	 * @param initialState
-	 *            the state to start from.
-	 */
-	public StateFlowGraph(StateVertex initialState) {
-		Preconditions.checkNotNull(initialState);
+	public StateVertex addState2(StateVertex state, boolean correctName)
+	{
 		
+		Node toBeAddedNode ; // the node to be added and update for storing the state in the database
+		Node alreadyEsixts ;
+		
+		Transaction tx = sfgDb.beginTx();
+		try
+		{
+			// adding the state to the graph database
 
-		// creating the graph db
-		
-//		sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
-//		
-//		// adding a shutdown hook to ensure the db will be shut down even if 
-//		// the program breaks
-//		
-//		registerShutdownHook(sfgDb);
-//		
+			toBeAddedNode = sfgDb.createNode();
 
-		sfg = new DirectedMultigraph<>(Eventable.class);
-//		
-//		// add the first node to the graph
+			// indexing the state in Index manager. the key that we are using
+			// for indexing is the stripped_dom field
+			// the new node is added to the index and h
+
+			alreadyEsixts = nodeIndex.putIfAbsent(toBeAddedNode, DOM_KEY, state
+					.getStrippedDom().getBytes());
+
+			if (alreadyEsixts != null) {
+				LOG.debug("Graph already contained vertex {}", state);
+
+				// because the state already exists in the graph the transaction
+				// is marked for
+				// being rolled back
+				tx.failure();
+			}
+
+			// correcting the name
+			int count = stateCounter.incrementAndGet();
+			LOG.debug("Number of states is now {}", count);
+			if (correctName) {
+				correctStateName(state);
+			}
+
+			byte[] serializedSV = StateFlowGraph.serializeStateVertex(state);
+
+			// adding the state property which is the main data we store for the
+			// each node (i.e. each StateVertex)
+			toBeAddedNode.setProperty(STATE_KEY, serializedSV);			
+			
+			
+			// flagging successful transaction
+			tx.success();
+		}
+		finally
+		{
+		    tx.finish();
+		}
+
+		if (alreadyEsixts == null )
+		{
+			// the state was absent so it was put in the database
+			return null;
+		}else{
+			
+			// Return the state retrieved from db in case the state is already present in the graph
+			return (StateVertex) deserializeStateVertex((byte[])alreadyEsixts.getProperty(STATE_KEY));
+		}
 		
-		sfg.addVertex(initialState);
-		this.initialState = initialState;
 	}
 	
-	public static void addAnode(StateVertex state)
-	{
-		byte [] serializedSV = StateFlowGraph.serializeStateVertex(state);
-
-	}
+	
 
 	/**
 	 * Adds a state (as a vertix) to the State-Flow Graph if not already present. More formally,
