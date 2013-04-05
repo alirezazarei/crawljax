@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 
 import com.google.common.base.Preconditions;
+import com.sun.jna.StringArray;
 
 /**
  * The State-Flow Graph is a multi-edge directed graph with states (StateVetex) on the vertices and
@@ -53,15 +54,20 @@ public class gdbStateFlowGraph implements Serializable {
 	
 	private static final String DB_PATH = "target/state-flow-graph-db";
 	
+	private final GraphDatabaseService sfgDb ;
+	
     private static final String STATE_KEY = "state";
     
     private static final String NODES_INDEX = "nodes";
     private static final String EDGES_INDEX = "edges";
-
 	private static final String DOM_KEY = "DOM";
+	private static final String SOURCE_KEY="source";
+	private static final String	TARGET_KEY= "target";
+	private static final String CLICKABLE_KEY = "clickable";
+	private static final String EDGE_COMNINED_KEY ="edgeCombinedKey";
     
     private static Index<Node> nodeIndex;
-    
+   
     private static Index<Relationship> edgesIndex;
 
 
@@ -105,26 +111,13 @@ public class gdbStateFlowGraph implements Serializable {
 		registerShutdownHook(sfgDb);
 
 	}
-	
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
+		
 	// the relationship between a source vertex and the destination vertex
 	
-	private static enum RelTypes implements RelationshipType
-	{
+	private static enum RelTypes implements RelationshipType{
 		TRANSITIONS_TO	    
 	}
-	
-	  private final GraphDatabaseService sfgDb ;
-		
+			
 	private static void registerShutdownHook( final GraphDatabaseService graphDatabaseService )
 	{
 	    // Registering a shutdown hook for the db instance so as to
@@ -211,6 +204,150 @@ public class gdbStateFlowGraph implements Serializable {
 		
 	}
 	
+
+public static byte [] serializeEventable(Eventable eventable){
+		
+		
+		byte [] serializedEventable = null;
+		
+		// this an output stream that does not require writing to the file and instead
+		// the output stream is stored in a buffer
+		// we use this class to utilize  the Java serialization api which writes and reads
+		// object to and from streams
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		
+		try {
+			
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+			
+			// serializing the Eventable object to the stream
+			
+			oos.writeObject(eventable);
+			
+			// converting the byte array to UTF-8 string for portability reasons
+			
+			serializedEventable = baos.toByteArray();
+			
+			// closing streams
+			
+			oos.close();
+			baos.close();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return serializedEventable;
+	}
+
+
+public static Eventable deserializeEventable (byte [] serializedEventable)
+{
+	// the returned value
+	
+	Eventable deserializedEventable = null;
+			
+	try {
+					
+		ByteArrayInputStream bais = new ByteArrayInputStream(serializedEventable);
+		
+		ObjectInputStream ois = new ObjectInputStream(bais);
+	
+		deserializedEventable = (Eventable) ois.readObject();
+		
+		// Closing streams
+		
+		ois.close();
+		bais.close();
+	
+	} catch (UnsupportedEncodingException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	} catch (ClassNotFoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}		
+	
+	return deserializedEventable;
+	
+}
+
+public boolean addEdge2(StateVertex sourceVert, StateVertex targetVert, Eventable clickable) {
+	
+	boolean exists = false;
+	byte [] serializedEventable = serializeEventable(clickable);
+
+	for (Relationship relationship: edgesIndex.get(SOURCE_KEY, sourceVert.getStrippedDom().getBytes())){
+		if (relationship.getProperty(TARGET_KEY).equals(targetVert.getStrippedDom().getBytes())){
+			if(relationship.getProperty(CLICKABLE_KEY).equals(serializedEventable)){
+				exists= true;
+				return false;
+			}
+		}
+	}
+//	
+//	for (Relationship relationship: edgesIndex.get("clickable",serializedEventable )){
+//		if (relationship.getStartNode().getProperty(DOM_KEY).equals(serializeStateVertex(sourceVert))){
+//			if (relationship.getEndNode().getProperty(DOM_KEY).equals(serializeStateVertex(targetVert))){
+//
+//				alreadyExits = true;
+//				return false;
+//			}
+//		}
+//	}
+	
+
+	//
+	Relationship toBeAddedEdge = null;
+	Relationship alreadyExist = null;
+	
+	String [] sourceClickabletarget = new String[3];
+	sourceClickabletarget[0]=sourceVert.getName();
+	sourceClickabletarget[2]= targetVert.getName();
+	sourceClickabletarget[1]=serializedEventable.toString();
+	
+	Transaction tx = sfgDb.beginTx();
+	try{
+		
+		Node sourceNode = nodeIndex.get(DOM_KEY, sourceVert.getStrippedDom()).getSingle();
+		Node targetNode = nodeIndex.get(DOM_KEY, targetVert.getStrippedDom()).getSingle(); 
+		toBeAddedEdge = sourceNode.createRelationshipTo(targetNode, RelTypes.TRANSITIONS_TO);
+		
+		// adding the new edge to the index. it returns null if the edge is successfully added
+		// and returns the found edge if and identical edge already exists in the index.
+		alreadyExist = edgesIndex.putIfAbsent(toBeAddedEdge, EDGE_COMNINED_KEY, sourceClickabletarget);
+		if (alreadyExist!=null){
+			exists = true;
+			tx.failure();
+		}else{
+			exists = false;
+			
+			toBeAddedEdge.setProperty(CLICKABLE_KEY, serializedEventable);
+		}		
+		tx.success();
+	}
+	finally{
+		tx.finish();
+		
+	}
+	
+	if (exists){
+
+		return false;
+	}
+	else{
+		return true;
+	}
+}
+
+
+
+	
 	private final DirectedGraph<StateVertex, Eventable> sfg = null;// null added
 
 	/**
@@ -229,12 +366,14 @@ public class gdbStateFlowGraph implements Serializable {
 	{
 		
 		Node toBeAddedNode ; // the node to be added and update for storing the state in the database
-		Node alreadyEsixts ;
+		Node alreadyEsixts ; // this is used for saving the returned result of the method putIfAbsent
 		
+		// starting the transaction 
 		Transaction tx = sfgDb.beginTx();
 		try
 		{
-			// adding the state to the graph database
+			// adding the place holder for the state to the graph database
+			
 
 			toBeAddedNode = sfgDb.createNode();
 
@@ -246,6 +385,7 @@ public class gdbStateFlowGraph implements Serializable {
 					.getStrippedDom().getBytes());
 
 			if (alreadyEsixts != null) {
+				// the state is already indexed
 				LOG.debug("Graph already contained vertex {}", state);
 
 				// because the state already exists in the graph the transaction
@@ -258,12 +398,14 @@ public class gdbStateFlowGraph implements Serializable {
 			int count = stateCounter.incrementAndGet();
 			LOG.debug("Number of states is now {}", count);
 			if (correctName) {
-				correctStateName(state);
+				correctStateName2(state);
 			}
 
+			
+			// serializing the state
 			byte[] serializedSV = StateFlowGraph.serializeStateVertex(state);
 
-			// adding the state property which is the main data we store for the
+			// adding the state property which is the main data we store for 
 			// each node (i.e. each StateVertex)
 			toBeAddedNode.setProperty(STATE_KEY, serializedSV);			
 			
@@ -288,63 +430,10 @@ public class gdbStateFlowGraph implements Serializable {
 		
 	}
 	
-	
-
-	/**
-	 * Adds a state (as a vertix) to the State-Flow Graph if not already present. More formally,
-	 * adds the specified vertex, v, to this graph if this graph contains no vertex u such that
-	 * u.equals(v). If this graph already contains such vertex, the call leaves this graph unchanged
-	 * and returns false. In combination with the restriction on constructors, this ensures that
-	 * graphs never contain duplicate vertices. Throws java.lang.NullPointerException - if the
-	 * specified vertex is null. This method automatically updates the state name to reflect the
-	 * internal state counter.
-	 * 
-	 * @param stateVertix
-	 *            the state to be added.
-	 * @return the clone if one is detected null otherwise.
-	 * @see org.jgrapht.Graph#addVertex(Object)
-	 */
-	public StateVertex addState(StateVertex stateVertix) {
-		return addState(stateVertix, true);
-	}
-
-	/**
-	 * Adds a state (as a vertix) to the State-Flow Graph if not already present. More formally,
-	 * adds the specified vertex, v, to this graph if this graph contains no vertex u such that
-	 * u.equals(v). If this graph already contains such vertex, the call leaves this graph unchanged
-	 * and returns false. In combination with the restriction on constructors, this ensures that
-	 * graphs never contain duplicate vertices. Throws java.lang.NullPointerException - if the
-	 * specified vertex is null.
-	 * 
-	 * @param stateVertix
-	 *            the state to be added.
-	 * @param correctName
-	 *            if true the name of the state will be corrected according to the internal state
-	 *            counter.
-	 * @return the clone if one is detected null otherwise.
-	 * @see org.jgrapht.Graph#addVertex(Object)
-	 */
-	@GuardedBy("sfg")
-	public StateVertex addState(StateVertex stateVertix, boolean correctName) {
-		synchronized (sfg) {
-			if (!sfg.addVertex(stateVertix)) {
-				// Graph already contained the vertix
-				LOG.debug("Graph already contained vertex {}", stateVertix);
-				return this.getStateInGraph(stateVertix);
-			} else {
-				int count = stateCounter.incrementAndGet();
-				LOG.debug("Number of states is now {}", count);
-				if (correctName) {
-					correctStateName(stateVertix);
-				}
-				return null;
-			}
-		}
-	}
-
-	private void correctStateName(StateVertex stateVertix) {
+	private void correctStateName2(StateVertex stateVertix) {
+		// we might need to luck the database here
 		// the -1 is for the "index" state.
-		int totalNumberOfStates = this.getAllStates().size() - 1;
+		int totalNumberOfStates = nodeIndex.get(STATE_KEY, "*").size() - 1;
 		String correctedName = makeStateName(totalNumberOfStates, stateVertix.isGuidedCrawling());
 		if (!"index".equals(stateVertix.getName())
 		        && !stateVertix.getName().equals(correctedName)) {
@@ -353,36 +442,11 @@ public class gdbStateFlowGraph implements Serializable {
 		}
 	}
 
-	/**
-	 * Adds the specified edge to this graph, going from the source vertex to the target vertex.
-	 * More formally, adds the specified edge, e, to this graph if this graph contains no edge e2
-	 * such that e2.equals(e). If this graph already contains such an edge, the call leaves this
-	 * graph unchanged and returns false. Some graphs do not allow edge-multiplicity. In such cases,
-	 * if the graph already contains an edge from the specified source to the specified target, than
-	 * this method does not change the graph and returns false. If the edge was added to the graph,
-	 * returns true. The source and target vertices must already be contained in this graph. If they
-	 * are not found in graph IllegalArgumentException is thrown.
-	 * 
-	 * @param sourceVert
-	 *            source vertex of the edge.
-	 * @param targetVert
-	 *            target vertex of the edge.
-	 * @param clickable
-	 *            the clickable edge to be added to this graph.
-	 * @return true if this graph did not already contain the specified edge.
-	 * @see org.jgrapht.Graph#addEdge(Object, Object, Object)
-	 */
-	@GuardedBy("sfg")
-	public boolean addEdge(StateVertex sourceVert, StateVertex targetVert, Eventable clickable) {
-		synchronized (sfg) {
-			if (sfg.containsEdge(sourceVert, targetVert)
-			        && sfg.getAllEdges(sourceVert, targetVert).contains(clickable)) {
-				return false;
-			} else {
-				return sfg.addEdge(sourceVert, targetVert, clickable);
-			}
-		}
-	}
+	
+	
+
+
+
 
 	/**
 	 * @return the string representation of the graph.
@@ -404,7 +468,15 @@ public class gdbStateFlowGraph implements Serializable {
 	 * @see org.jgrapht.DirectedGraph#outgoingEdgesOf(Object)
 	 */
 	public Set<Eventable> getOutgoingClickables(StateVertex stateVertix) {
-		return sfg.outgoingEdgesOf(stateVertix);
+		Set<Eventable> outgoing = new HashSet<Eventable>();
+		Node state = nodeIndex.get(DOM_KEY, stateVertix.getStrippedDom()).getSingle();
+		for (Relationship edge: state.getRelationships(RelTypes.TRANSITIONS_TO, Direction.OUTGOING)){
+			byte [] serializedEvantable = (byte[]) edge.getProperty(CLICKABLE_KEY);
+			Eventable eventable = (Eventable) deserializeEventable( serializedEvantable);
+			outgoing.add(eventable);
+		}
+	
+		return outgoing;
 	}
 
 	/**
@@ -416,7 +488,18 @@ public class gdbStateFlowGraph implements Serializable {
 	 * @see org.jgrapht.DirectedGraph#incomingEdgesOf(Object)
 	 */
 	public Set<Eventable> getIncomingClickable(StateVertex stateVertix) {
-		return sfg.incomingEdgesOf(stateVertix);
+		
+		Set<Eventable> incoming = new HashSet<Eventable>();
+		Node state = nodeIndex.get(DOM_KEY, stateVertix.getStrippedDom()).getSingle();
+		
+		for (Relationship edge: state.getRelationships(RelTypes.TRANSITIONS_TO, Direction.INCOMING)){
+			byte [] serializedEvantable = (byte[]) edge.getProperty(CLICKABLE_KEY);
+			Eventable eventable = (Eventable) deserializeEventable( serializedEvantable);
+			incoming.add(eventable);
+		}
+	
+		return incoming;
+
 	}
 
 	/**
@@ -427,13 +510,21 @@ public class gdbStateFlowGraph implements Serializable {
 	 * @return the set of outgoing states from the stateVertix.
 	 */
 	public Set<StateVertex> getOutgoingStates(StateVertex stateVertix) {
-		final Set<StateVertex> result = new HashSet<StateVertex>();
-
-		for (Eventable c : getOutgoingClickables(stateVertix)) {
-			result.add(sfg.getEdgeTarget(c));
+		
+	
+		final	Set<StateVertex> outgoing = new HashSet<StateVertex>();
+		
+		Node sourceNode = nodeIndex.get(DOM_KEY, stateVertix.getStrippedDom()).getSingle();
+		
+		for (Relationship edge: sourceNode.getRelationships(RelTypes.TRANSITIONS_TO, Direction.OUTGOING)){
+			Node endNode =edge.getEndNode();
+			byte [] serializedState = (byte[]) endNode.getProperty(STATE_KEY);
+			StateVertex targetState = (StateVertex) deserializeStateVertex(serializedState);
+			outgoing.add(targetState);
 		}
+	
+		return outgoing;
 
-		return result;
 	}
 
 	/**
@@ -442,7 +533,17 @@ public class gdbStateFlowGraph implements Serializable {
 	 * @return the target state of this edge.
 	 */
 	public StateVertex getTargetState(Eventable clickable) {
-		return sfg.getEdgeTarget(clickable);
+		
+		byte[] serializedEventable = serializeEventable(clickable);
+		
+		Relationship edge = (Relationship) edgesIndex.get(CLICKABLE_KEY, serializedEventable);
+		
+		Node targetNode  = edge.getEndNode();
+		
+		byte[] srializedState = (byte[]) targetNode.getProperty(STATE_KEY);
+		StateVertex target = deserializeStateVertex(srializedState);
+		
+		return target;
 	}
 
 	/**
@@ -454,11 +555,23 @@ public class gdbStateFlowGraph implements Serializable {
 	 *            the target state.
 	 * @return true if it is possible (edge exists in graph) to go from source to target.
 	 */
-	@GuardedBy("sfg")
 	public boolean canGoTo(StateVertex source, StateVertex target) {
-		synchronized (sfg) {
-			return sfg.containsEdge(source, target) || sfg.containsEdge(target, source);
+		
+		Node sourceNode = nodeIndex.get(DOM_KEY, source.getStrippedDom()).getSingle();
+		for (Relationship edge: sourceNode.getRelationships(RelTypes.TRANSITIONS_TO, Direction.OUTGOING)){
+			
+			Node targetNode = edge.getEndNode();
+			byte[] serializedNode = (byte[])targetNode.getProperty(STATE_KEY);
+			
+			StateVertex ts = deserializeStateVertex(serializedNode);
+			if (ts.equals(target))
+			{
+				return true;
+			}
 		}
+		
+		return false;
+		
 	}
 
 	/**
@@ -480,7 +593,21 @@ public class gdbStateFlowGraph implements Serializable {
 	 * @return all the states on the graph.
 	 */
 	public Set<StateVertex> getAllStates() {
-		return sfg.vertexSet();
+		
+		final	Set<StateVertex> allStates = new HashSet<StateVertex>();
+		
+		for ( Node node:  nodeIndex.get(DOM_KEY, "*")){
+			
+			byte[] serializedNode = (byte[]) node.getProperty(STATE_KEY);
+			
+			StateVertex state = deserializeStateVertex(serializedNode);
+			
+			allStates.add(state);
+			
+		}
+
+
+		return allStates;
 	}
 
 	/**
@@ -489,8 +616,26 @@ public class gdbStateFlowGraph implements Serializable {
 	 * @return a Set of all edges in the StateFlowGraph
 	 */
 	public Set<Eventable> getAllEdges() {
-		return sfg.edgeSet();
+		
+		final	Set<Eventable> all = new HashSet<Eventable>();
+		
+		for ( Relationship edge:  edgesIndex.get(EDGE_COMNINED_KEY, "*")){
+			
+			byte[] serializededge = (byte[]) edge.getProperty(CLICKABLE_KEY);
+			
+			Eventable eventable = deserializeEventable(serializededge);
+			
+		all.add(eventable);
+			
+		}
+
+
+		return all;
 	}
+
+
+		
+
 
 	/**
 	 * Retrieve the copy of a state from the StateFlowGraph for a given StateVertix. Basically it
