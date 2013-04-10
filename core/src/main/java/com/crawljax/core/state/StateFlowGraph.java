@@ -21,11 +21,6 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.DijkstraShortestPath;
 import org.jgrapht.alg.KShortestPaths;
 import org.jgrapht.graph.DirectedMultigraph;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.RelationshipType;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
-import org.neo4j.graphdb.*;
-import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,107 +35,6 @@ public class StateFlowGraph implements Serializable {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(StateFlowGraph.class.getName());
-
-	// The directory path for saving the graph-db created by neo4j for
-	// persisting the state flow graph
-
-	// private static final String DB_PATH = "target/state-flow-graph-db";
-	//
-	// // the relationship between a source vertex and the destination vertex
-	//
-	// private static enum RelTypes implements RelationshipType
-	// {
-	// TRANSITIONS_TO
-	// }
-	//
-	// private GraphDatabaseService sfgDb ;
-
-	private static void registerShutdownHook(
-			final GraphDatabaseService graphDatabaseService) {
-		// Registering a shutdown hook for the db instance so as to
-		// shut it down nicely when the VM exits
-
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			@Override
-			public void run() {
-				graphDatabaseService.shutdown();
-			}
-		});
-	}
-
-	public static byte[] serializeStateVertex(StateVertex stateVertex) {
-
-		byte[] serializedStateVertex = null;
-
-		// this an output stream that does not require writing to the file and
-		// instead
-		// the output stream is stored in a buffer
-		// we use this class to utilize the Java serialization api which writes
-		// and reads
-		// object to and from streams
-
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-		try {
-
-			ObjectOutputStream oos = new ObjectOutputStream(baos);
-
-			// seriliazing the stateVertex object to the stream
-
-			oos.writeObject(stateVertex);
-
-			// converting the byte array to UTF-8 string for portability reasons
-
-			serializedStateVertex = baos.toByteArray();
-
-			// closing streams
-
-			oos.close();
-			baos.close();
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return serializedStateVertex;
-	}
-
-	public static StateVertex deserializeStateVertex(
-			byte[] serializedStateVertex) {
-		// the returned value
-
-		StateVertex deserializedSV = null;
-
-		try {
-
-			ByteArrayInputStream bais = new ByteArrayInputStream(
-					serializedStateVertex);
-
-			ObjectInputStream ois = new ObjectInputStream(bais);
-
-			deserializedSV = (StateVertex) ois.readObject();
-
-			// clsoing streams
-
-			ois.close();
-			bais.close();
-
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return deserializedSV;
-
-	}
-
 	private final DirectedGraph<StateVertex, Eventable> sfg;
 
 	/**
@@ -160,15 +54,6 @@ public class StateFlowGraph implements Serializable {
 	public StateFlowGraph(StateVertex initialState) {
 		Preconditions.checkNotNull(initialState);
 
-		// creating the graph db
-
-		// sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
-		//
-		// // adding a shutdown hook to ensure the db will be shut down even if
-		// // the program breaks
-		//
-		// registerShutdownHook(sfgDb);
-		//
 
 		sfg = new DirectedMultigraph<>(Eventable.class);
 		//
@@ -178,10 +63,6 @@ public class StateFlowGraph implements Serializable {
 		this.initialState = initialState;
 	}
 
-	public static void addAnode(StateVertex state) {
-		byte[] serializedSV = StateFlowGraph.serializeStateVertex(state);
-
-	}
 
 	/**
 	 * Adds a state (as a vertix) to the State-Flow Graph if not already
