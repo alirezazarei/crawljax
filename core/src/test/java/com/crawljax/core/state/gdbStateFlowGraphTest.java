@@ -34,7 +34,7 @@ public class gdbStateFlowGraphTest {
 		StateVertex state4 = new StateVertex("STATE_FOUR", "<table><div>state4</div></table>");
 		StateVertex state5 = new StateVertex("STATE_FIVE", "<table><div>state5</div></table>");
 
-		gdbStateFlowGraph graph = new gdbStateFlowGraph(index);
+		StateFlowGraph graph = new StateFlowGraph(index);
 
 		StateVertex DOUBLE = new StateVertex("index", "<table><div>index</div></table>");
 		assertTrue(graph.addState(state2) == null);
@@ -97,7 +97,7 @@ public class gdbStateFlowGraphTest {
 		StateVertex state2 = new StateVertex("STATE_TWO", "<table><div>state2</div></table>");
 		StateVertex state3 = new StateVertex("STATE_THREE", "<table><div>state2</div></table>");
 
-		gdbStateFlowGraph graph = new gdbStateFlowGraph(index);
+		StateFlowGraph graph = new StateFlowGraph(index);
 
 		StateVertex state4 = new StateVertex("STATE_FOUR", "<table><div>state4</div></table>");
 		assertTrue(graph.addState(state2) == null);
@@ -131,7 +131,7 @@ public class gdbStateFlowGraphTest {
 		                + "<SCRIPT src='js/jquery-1.2.3.js' type='text/javascript'></SCRIPT>"
 		                + "<body><div id='firstdiv' class='orange'>";
 
-		gdbStateFlowGraph g = new gdbStateFlowGraph(new StateVertex("", HTML1));
+		StateFlowGraph g = new StateFlowGraph(new StateVertex("", HTML1));
 		g.addState(new StateVertex("", HTML2));
 
 		assertEquals(206, g.getMeanStateStringSize());
@@ -142,7 +142,7 @@ public class gdbStateFlowGraphTest {
 
 		StateVertex state1 = new StateVertex("STATE_ONE", "<table><div>state1</div></table>");
 		StateVertex state2 = new StateVertex("STATE_TWO", "<table><div>state2</div></table>");
-		gdbStateFlowGraph sfg = new gdbStateFlowGraph(state1);
+		StateFlowGraph sfg = new StateFlowGraph(state1);
 
 		Eventable c1 =
 		        new Eventable(new Identification(How.xpath, "/body/div[4]"), EventType.click);
@@ -165,7 +165,7 @@ public class gdbStateFlowGraphTest {
 		StateVertex state3 = new StateVertex("STATE_THREE", "<table><div>state3</div></table>");
 		StateVertex state4 = new StateVertex("STATE_FOUR", "<table><div>state4</div></table>");
 		StateVertex state5 = new StateVertex("STATE_FIVE", "<table><div>state5</div></table>");
-		gdbStateFlowGraph g = new gdbStateFlowGraph(index);
+		StateFlowGraph g = new StateFlowGraph(index);
 		g.addState(state2);
 		g.addState(state3);
 		g.addState(state4);
@@ -200,7 +200,7 @@ public class gdbStateFlowGraphTest {
 		StateVertex state3 = new StateVertex("STATE_THREE", "<table><div>state3</div></table>");
 		StateVertex state4 = new StateVertex("STATE_FOUR", "<table><div>state4</div></table>");
 		StateVertex state5 = new StateVertex("STATE_FIVE", "<table><div>state5</div></table>");
-		gdbStateFlowGraph g = new gdbStateFlowGraph(index);
+		StateFlowGraph g = new StateFlowGraph(index);
 		g.addState(state2);
 		g.addState(state3);
 		g.addState(state4);
@@ -229,7 +229,7 @@ public class gdbStateFlowGraphTest {
 		StateVertex state2 = new StateVertex("STATE_TWO", "<table><div>state2</div></table>");
 		StateVertex state3 = new StateVertex("STATE_THREE", "<table><div>state3</div></table>");
 		StateVertex state4 = new StateVertex("STATE_FOUR", "<table><div>state4</div></table>");
-		gdbStateFlowGraph graph = new gdbStateFlowGraph(index);
+		StateFlowGraph graph = new StateFlowGraph(index);
 		assertTrue(graph.addState(state2) == null);
 		assertTrue(graph.addState(state3) == null);
 		assertTrue(graph.addState(state4) == null);

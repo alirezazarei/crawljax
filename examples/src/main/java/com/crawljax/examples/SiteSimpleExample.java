@@ -17,7 +17,7 @@ public final class SiteSimpleExample {
 
 	private static final String HEADER_XPATH = "//DIV[@id='guser']";
 
-	private static final int MAX_CRAWL_DEPTH = 1;
+	private static final int MAX_CRAWL_DEPTH = 2;
 	private static final int MAX_STATES = 10;
 
 	/**
