@@ -16,7 +16,7 @@
 		</encoder>
 	</appender>
 
-	<logger name="com.crawljax" level="INFO" />
+	<logger name="com.crawljax" level="DEBUG" />
 
 	<root level="INFO">
 		<appender-ref ref="FILE" />
