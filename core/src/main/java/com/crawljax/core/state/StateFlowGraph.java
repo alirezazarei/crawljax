@@ -739,6 +739,24 @@ public class StateFlowGraph implements Serializable {
 				return true;
 			}
 		}
+		
+		// searching for back links
+		Node tagetNode = getNodeFromDB(target.getStrippedDom());
+		for (Relationship edge : tagetNode.getRelationships(
+				RelTypes.TRANSITIONS_TO, Direction.OUTGOING)) {
+
+			Node srcNode = edge.getEndNode();
+			byte[] serializedNode = (byte[]) srcNode
+					.getProperty(STATE_VERTEX_KEY);
+
+			StateVertex ts = deserializeStateVertex(serializedNode);
+			if (ts.equals(source)) {
+				return true;
+			}
+		}
+
+		
+		
 
 		return false;
 
