@@ -536,10 +536,11 @@ public class StateFlowGraph implements Serializable {
 			return null;
 		} else {
 
-			// Return the state retrieved from database in case the state is
-			// already present in the graph
-			return (StateVertex) deserializeStateVertex((byte[]) alreadyEsixts
-					.getProperty(STATE_VERTEX_KEY));
+//			// Return the state retrieved from database in case the state is
+//			// already present in the graph
+//			return (StateVertex) deserializeStateVertex((byte[]) alreadyEsixts
+//					.getProperty(STATE_VERTEX_KEY));
+			return state;
 		}
 
 	}

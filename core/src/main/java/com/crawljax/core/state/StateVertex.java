@@ -49,15 +49,15 @@ public class StateVertex implements Serializable {
 	 * This list is used to store the possible candidates. If it is null its not initialised if it's
 	 * a empty list its empty.
 	 */
-	private transient LinkedBlockingDeque<CandidateCrawlAction> candidateActions =
+	private  LinkedBlockingDeque<CandidateCrawlAction> candidateActions =
 	        new LinkedBlockingDeque<>();;
 
-	private transient final ConcurrentHashMap<Crawler, CandidateCrawlAction> registerdCandidateActions =
+	private  final ConcurrentHashMap<Crawler, CandidateCrawlAction> registerdCandidateActions =
 	        new ConcurrentHashMap<>();
-	private transient final ConcurrentHashMap<Crawler, CandidateCrawlAction> workInProgressCandidateActions =
+	private  final ConcurrentHashMap<Crawler, CandidateCrawlAction> workInProgressCandidateActions =
 	        new ConcurrentHashMap<>();
 
-	private transient final LinkedBlockingDeque<Crawler> registeredCrawlers = new LinkedBlockingDeque<>();
+	private  final LinkedBlockingDeque<Crawler> registeredCrawlers = new LinkedBlockingDeque<>();
 
 	/**
 	 * Default constructor to support saving instances of this class as an XML.
