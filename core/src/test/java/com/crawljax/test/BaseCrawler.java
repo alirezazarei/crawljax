@@ -34,9 +34,9 @@ public class BaseCrawler {
 	 * @param siteExtension
 	 *            Assumes the sites are in <code>resources/sites</code>.
 	 */
-	protected BaseCrawler(String siteExtension) {
+	public BaseCrawler(String siteExtension) {
 		this.siteExtension = siteExtension;
-		URL sampleSites = BaseCrawler.class.getResource("/sites");
+		URL sampleSites = BaseCrawler.class.getResource("/site");
 		LOG.debug("Loading web server with from folder {}", sampleSites.toExternalForm());
 		try {
 			this.webServer = new WebServer(Resource.newResource(sampleSites));
@@ -87,7 +87,7 @@ public class BaseCrawler {
 		} catch (Exception e) {
 			throw new RuntimeException("Could not start the server", e);
 		}
-		configBuilder = newCrawlConfiguartionBuilder();
+		configBuilder = newCrawlConfigurationBuilder();
 		hasSetup.set(true);
 	}
 
@@ -96,7 +96,7 @@ public class BaseCrawler {
 	 * 
 	 * @return a new {@link CrawljaxConfiguration} to crawl with.
 	 */
-	protected CrawljaxConfigurationBuilder newCrawlConfiguartionBuilder() {
+	protected CrawljaxConfigurationBuilder newCrawlConfigurationBuilder() {
 		CrawljaxConfigurationBuilder builder = CrawljaxConfiguration.builderFor(getUrl());
 		builder.crawlRules().clickDefaultElements();
 		builder.setUnlimitedRuntime();

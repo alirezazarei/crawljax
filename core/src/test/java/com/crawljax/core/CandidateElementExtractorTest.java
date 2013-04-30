@@ -76,7 +76,7 @@ public class CandidateElementExtractorTest {
 		controller = new CrawljaxController(config);
 		crawler = new CEETCrawler(controller);
 
-		crawler.goToInitialURL();
+		crawler.goToInitialURL(true);
 
 		Thread.sleep(400);
 	}

@@ -1,5 +1,7 @@
 package com.crawljax.crawltests;
 
+import org.eclipse.jetty.util.resource.Resource;
+
 import com.crawljax.core.configuration.CrawljaxConfiguration.CrawljaxConfigurationBuilder;
 import com.crawljax.core.configuration.InputField;
 import com.crawljax.core.configuration.InputSpecification;
@@ -14,12 +16,12 @@ public class SimpleInputSiteCrawl extends BaseCrawler {
 	public static final int NUMBER_OF_EDGES = 1;
 
 	public SimpleInputSiteCrawl() {
-		super("simple-input-site");
+		super(Resource.newClassPathResource("sites"), "simple-input-site");
 	}
 
 	@Override
-	protected CrawljaxConfigurationBuilder newCrawlConfiguartionBuilder() {
-		CrawljaxConfigurationBuilder builder = super.newCrawlConfiguartionBuilder();
+	protected CrawljaxConfigurationBuilder newCrawlConfigurationBuilder() {
+		CrawljaxConfigurationBuilder builder = super.newCrawlConfigurationBuilder();
 		builder.crawlRules().setInputSpec(getInputSpecification());
 		return builder;
 	}
