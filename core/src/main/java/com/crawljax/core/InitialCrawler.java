@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.crawljax.browser.EmbeddedBrowser;
-import com.crawljax.core.plugin.CrawljaxPluginsUtil;
+import com.crawljax.core.plugin.Plugins;
 import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.StateFlowGraph;
 import com.crawljax.core.state.StateMachine;
@@ -25,6 +25,8 @@ public class InitialCrawler extends Crawler {
 
 	private final CrawljaxController controller;
 
+	private final Plugins plugins;
+
 	private EmbeddedBrowser browser; // should be final but try-catch prevents...
 
 	private StateMachine stateMachine;
@@ -38,6 +40,7 @@ public class InitialCrawler extends Crawler {
 	public InitialCrawler(CrawljaxController mother) {
 		super(mother, new ArrayList<Eventable>(), "initial");
 		controller = mother;
+		this.plugins = mother.getConfiguration().getPlugins();
 	}
 
 	@Override
@@ -59,42 +62,27 @@ public class InitialCrawler extends Crawler {
 			LOGGER.error("The request for a browser was interuped.");
 		}
 
-		goToInitialURL();
+		goToInitialURL(true);
 
-		/**
-		 * Build the index state
-		 */
 		StateVertex indexState =
-		        new StateVertex(this.getBrowser().getCurrentUrl(), "index", this.getBrowser()
+		        new StateVertex(browser.getCurrentUrl(), "index", this.getBrowser()
 		                .getDom(), controller.getStrippedDom(this.getBrowser()));
 
-		/**
-		 * Build the StateFlowGraph
-		 */
 		StateFlowGraph stateFlowGraph = new StateFlowGraph(indexState);
 
-		/**
-		 * Build the StateMachine
-		 */
 		stateMachine =
-		        new StateMachine(stateFlowGraph, indexState, controller.getInvariantList());
+		        new StateMachine(stateFlowGraph, indexState, controller.getInvariantList(),
+		                plugins);
 
-		/**
-		 * Build the CrawlSession
-		 */
 		CrawlSession session =
 		        new CrawlSession(controller.getBrowserPool(), stateFlowGraph, indexState,
 		                controller.getStartCrawl(), controller.getConfiguration());
 		controller.setSession(session);
 
-		/**
-		 * Run OnNewState Plugins for the index state.
-		 */
-		CrawljaxPluginsUtil.runOnNewStatePlugins(session);
+		// Run OnNewState Plugins for the index state.
+		plugins.runOnNewStatePlugins(session);
 
-		/**
-		 * The initial work is done, continue with the normal procedure!
-		 */
+		// The initial work is done, continue with the normal procedure!
 		super.run();
 
 	}

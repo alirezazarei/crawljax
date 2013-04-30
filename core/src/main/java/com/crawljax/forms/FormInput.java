@@ -31,7 +31,6 @@ public class FormInput implements Serializable {
 
 	private Set<InputValue> inputValues = new HashSet<InputValue>();
 	private Eventable eventable;
-	// public int index;
 
 	private boolean multiple;
 

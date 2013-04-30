@@ -51,7 +51,6 @@ public class InputValue implements Serializable{
 	@Override
 	public String toString() {
 		return getValue();
-		// + " formInput " + formInput.getId();
 	}
 
 	/**

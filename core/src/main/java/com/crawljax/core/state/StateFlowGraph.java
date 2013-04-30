@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
 import org.neo4j.helpers.UTF8;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 /**
  * The State-Flow Graph is a directed multigraph with states (StateVetex) on the
@@ -266,10 +268,19 @@ public class StateFlowGraph implements Serializable {
 
 	}
 
+<<<<<<< HEAD
 	public static byte[] serializeEventable(Eventable eventable, int i) {
 		byte[] result = SerializationUtils.serialize(eventable);
 		return result;
 	}
+=======
+	/**
+	 * Intermediate counter for the number of states, not relaying on getAllStates.size() because of
+	 * Thread-safety.
+	 */
+	private final AtomicInteger stateCounter = new AtomicInteger();
+	private final AtomicInteger nextStateNameCounter = new AtomicInteger();
+>>>>>>> master
 
 	public static Eventable deserializeEventable(byte[] serializedEventable,
 			int i) {
@@ -278,6 +289,7 @@ public class StateFlowGraph implements Serializable {
 
 		return results;
 
+<<<<<<< HEAD
 	}
 
 	public static byte[] serializeEventable(Eventable eventable) {
@@ -514,6 +526,77 @@ public class StateFlowGraph implements Serializable {
 			LOG.debug("Number of states is now {}", count);
 			if (correctName) {
 				correctStateName(state);
+=======
+		// creating the graph db
+		
+//		sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH);
+//		
+//		// adding a shutdown hook to ensure the db will be shut down even if 
+//		// the program breaks
+//		
+//		registerShutdownHook(sfgDb);
+//		
+
+		sfg = new DirectedMultigraph<>(Eventable.class);
+//		
+//		// add the first node to the graph
+		
+		sfg.addVertex(initialState);
+		stateCounter.incrementAndGet();
+		this.initialState = initialState;
+		LOG.debug("Initialized the stateflowgraph with an initial state");
+	}
+
+	/**
+	 * Adds a state (as a vertix) to the State-Flow Graph if not already present. More formally,
+	 * adds the specified vertex, v, to this graph if this graph contains no vertex u such that
+	 * u.equals(v). If this graph already contains such vertex, the call leaves this graph unchanged
+	 * and returns false. In combination with the restriction on constructors, this ensures that
+	 * graphs never contain duplicate vertices. Throws java.lang.NullPointerException - if the
+	 * specified vertex is null. This method automatically updates the state name to reflect the
+	 * internal state counter.
+	 * 
+	 * @param stateVertix
+	 *            the state to be added.
+	 * @return the clone if one is detected null otherwise.
+	 * @see org.jgrapht.Graph#addVertex(Object)
+	 */
+	public StateVertex putIfAbsent(StateVertex stateVertix) {
+		return putIfAbsent(stateVertix, true);
+	}
+
+	/**
+	 * Adds a state (as a vertix) to the State-Flow Graph if not already present. More formally,
+	 * adds the specified vertex, v, to this graph if this graph contains no vertex u such that
+	 * u.equals(v). If this graph already contains such vertex, the call leaves this graph unchanged
+	 * and returns false. In combination with the restriction on constructors, this ensures that
+	 * graphs never contain duplicate vertices. Throws java.lang.NullPointerException - if the
+	 * specified vertex is null.
+	 * 
+	 * @param stateVertix
+	 *            the state to be added.
+	 * @param correctName
+	 *            if true the name of the state will be corrected according to the internal state
+	 *            counter.
+	 * @return the clone if one is detected null otherwise.
+	 * @see org.jgrapht.Graph#addVertex(Object)
+	 */
+	@GuardedBy("sfg")
+	public StateVertex putIfAbsent(StateVertex stateVertix, boolean correctName) {
+		synchronized (sfg) {
+			boolean added = sfg.addVertex(stateVertix);
+			if (added) {
+				int count = stateCounter.incrementAndGet();
+				LOG.debug("Number of states is now {}", count);
+				if (correctName) {
+					correctStateName(stateVertix);
+				}
+				return null;
+			} else {
+				// Graph already contained the vertix
+				LOG.debug("Graph already contained vertex {}", stateVertix);
+				return this.getStateInGraph(stateVertix);
+>>>>>>> master
 			}
 
 			// serializing the state
@@ -627,6 +710,7 @@ public class StateFlowGraph implements Serializable {
 	 * @return a set of the outgoing edges (clickables) of the stateVertix.
 	 * @see org.jgrapht.DirectedGraph#outgoingEdgesOf(Object)
 	 */
+<<<<<<< HEAD
 	public Set<Eventable> getOutgoingClickables(StateVertex stateVertix) {
 		Set<Eventable> outgoing = new HashSet<Eventable>();
 		Node state = getNodeFromDB(stateVertix.getStrippedDom());
@@ -640,6 +724,10 @@ public class StateFlowGraph implements Serializable {
 		}
 
 		return outgoing;
+=======
+	public ImmutableSet<Eventable> getOutgoingClickables(StateVertex stateVertix) {
+		return ImmutableSet.copyOf(sfg.outgoingEdgesOf(stateVertix));
+>>>>>>> master
 	}
 
 	/**
@@ -650,6 +738,7 @@ public class StateFlowGraph implements Serializable {
 	 * @return a set of the incoming edges (clickables) of the stateVertix.
 	 * @see org.jgrapht.DirectedGraph#incomingEdgesOf(Object)
 	 */
+<<<<<<< HEAD
 	public Set<Eventable> getIncomingClickable(StateVertex stateVertix) {
 
 		Set<Eventable> incoming = new HashSet<Eventable>();
@@ -666,6 +755,10 @@ public class StateFlowGraph implements Serializable {
 
 		return incoming;
 
+=======
+	public ImmutableSet<Eventable> getIncomingClickable(StateVertex stateVertix) {
+		return ImmutableSet.copyOf(sfg.incomingEdgesOf(stateVertix));
+>>>>>>> master
 	}
 
 	/**
@@ -675,7 +768,12 @@ public class StateFlowGraph implements Serializable {
 	 *            the state.
 	 * @return the set of outgoing states from the stateVertix.
 	 */
+<<<<<<< HEAD
 	public Set<StateVertex> getOutgoingStates(StateVertex stateVertix) {
+=======
+	public ImmutableSet<StateVertex> getOutgoingStates(StateVertex stateVertix) {
+		final Set<StateVertex> result = new HashSet<>();
+>>>>>>> master
 
 		final Set<StateVertex> outgoing = new HashSet<StateVertex>();
 
@@ -690,8 +788,12 @@ public class StateFlowGraph implements Serializable {
 			outgoing.add(targetState);
 		}
 
+<<<<<<< HEAD
 		return outgoing;
 
+=======
+		return ImmutableSet.copyOf(result);
+>>>>>>> master
 	}
 
 	/**
@@ -782,6 +884,7 @@ public class StateFlowGraph implements Serializable {
 	 * 
 	 * @return all the states on the graph.
 	 */
+<<<<<<< HEAD
 	public Set<StateVertex> getAllStates() {
 
 		final Set<StateVertex> allStates = new HashSet<StateVertex>();
@@ -797,6 +900,10 @@ public class StateFlowGraph implements Serializable {
 		}
 
 		return allStates;
+=======
+	public ImmutableSet<StateVertex> getAllStates() {
+		return ImmutableSet.copyOf(sfg.vertexSet());
+>>>>>>> master
 	}
 
 	/**
@@ -804,6 +911,7 @@ public class StateFlowGraph implements Serializable {
 	 * 
 	 * @return a Set of all edges in the StateFlowGraph
 	 */
+<<<<<<< HEAD
 	public Set<Eventable> getAllEdges() {
 
 		final Set<Eventable> all = new HashSet<Eventable>();
@@ -819,6 +927,10 @@ public class StateFlowGraph implements Serializable {
 		}
 
 		return all;
+=======
+	public ImmutableSet<Eventable> getAllEdges() {
+		return ImmutableSet.copyOf(sfg.edgeSet());
+>>>>>>> master
 	}
 
 	/**
@@ -827,18 +939,20 @@ public class StateFlowGraph implements Serializable {
 	 * 
 	 * @param state
 	 *            the StateVertix to search
+<<<<<<< HEAD
 	 * @return the copy of the StateVertix in the StateFlowGraph where
 	 *         v.equals(u)
+=======
+	 * @return the copy of the StateVertix in the StateFlowGraph where v.equals(u) or
+	 *         <code>null</code> if not found.
+>>>>>>> master
 	 */
 	private StateVertex getStateInGraph(StateVertex state) {
-		Set<StateVertex> states = getAllStates();
-
-		for (StateVertex st : states) {
+		for (StateVertex st : sfg.vertexSet()) {
 			if (state.equals(st)) {
 				return st;
 			}
 		}
-
 		return null;
 	}
 
@@ -848,7 +962,7 @@ public class StateFlowGraph implements Serializable {
 	public int getMeanStateStringSize() {
 		final Mean mean = new Mean();
 
-		for (StateVertex state : getAllStates()) {
+		for (StateVertex state : sfg.vertexSet()) {
 			mean.increment(state.getDomSize());
 		}
 
@@ -911,6 +1025,7 @@ public class StateFlowGraph implements Serializable {
 	 *            the initial state.
 	 * @return a list of GraphPath lists.
 	 */
+<<<<<<< HEAD
 //	public List<List<GraphPath<StateVertex, Eventable>>> getAllPossiblePaths(
 //			StateVertex index) {
 //		final List<List<GraphPath<StateVertex, Eventable>>> results = new ArrayList<List<GraphPath<StateVertex, Eventable>>>();
@@ -934,6 +1049,28 @@ public class StateFlowGraph implements Serializable {
 //
 //		return results;
 //	}
+=======
+	public List<List<GraphPath<StateVertex, Eventable>>> getAllPossiblePaths(StateVertex index) {
+		final List<List<GraphPath<StateVertex, Eventable>>> results = Lists.newArrayList();
+
+		final KShortestPaths<StateVertex, Eventable> kPaths =
+		        new KShortestPaths<>(this.sfg, index, Integer.MAX_VALUE);
+
+		for (StateVertex state : getDeepStates(index)) {
+
+			try {
+				List<GraphPath<StateVertex, Eventable>> paths = kPaths.getPaths(state);
+				results.add(paths);
+			} catch (Exception e) {
+				// TODO Stefan; which Exception is catched here???Can this be removed?
+				LOG.error("Error with " + state.toString(), e);
+			}
+
+		}
+
+		return results;
+	}
+>>>>>>> master
 
 	/**
 	 * Return the name of the (new)State. By using the AtomicInteger the
@@ -942,8 +1079,7 @@ public class StateFlowGraph implements Serializable {
 	 * @return State name the name of the state
 	 */
 	public String getNewStateName() {
-		stateCounter.getAndIncrement();
-		String state = makeStateName(stateCounter.get(), false);
+		String state = makeStateName(nextStateNameCounter.incrementAndGet(), false);
 		return state;
 	}
 
@@ -967,5 +1103,12 @@ public class StateFlowGraph implements Serializable {
 
 	public boolean isInitialState(StateVertex state) {
 		return initialState.equals(state);
+	}
+
+	/**
+	 * @return The number of states, currently in the graph.
+	 */
+	public int getNumberOfStates() {
+		return stateCounter.get();
 	}
 }

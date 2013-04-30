@@ -1,5 +1,7 @@
 package com.crawljax.core.configuration;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +11,8 @@ import com.crawljax.core.Crawler;
 import com.crawljax.core.CrawljaxException;
 import com.crawljax.core.configuration.CrawlRules.CrawlRulesBuilder;
 import com.crawljax.core.plugin.Plugin;
+import com.crawljax.core.plugin.Plugins;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -24,6 +28,7 @@ public final class CrawljaxConfiguration {
 		private final CrawlRulesBuilder crawlRules = CrawlRules.builder();
 
 		private CrawljaxConfigurationBuilder(URL url) {
+			Preconditions.checkNotNull(url);
 			config = new CrawljaxConfiguration();
 			config.url = url;
 		}
@@ -34,7 +39,7 @@ public final class CrawljaxConfiguration {
 		 *            unlimited.
 		 */
 		public CrawljaxConfigurationBuilder setMaximumStates(int states) {
-			Preconditions.checkArgument(states > 1, "States should be positive");
+			checkArgument(states > 1, "Number of maximum states should be largen than 1");
 			config.maximumStates = states;
 			return this;
 		}
@@ -52,7 +57,7 @@ public final class CrawljaxConfiguration {
 		 *            The maximum time the crawler should run. Default is one hour.
 		 */
 		public CrawljaxConfigurationBuilder setMaximumRunTime(long time, TimeUnit unit) {
-			Preconditions.checkArgument(time > 0, "Time should larger than 0");
+			checkArgument(time >= 0, "Time should be larger than 0, or 0 for infinate.");
 			config.maximumRuntime = unit.toMillis(time);
 			return this;
 		}
@@ -70,7 +75,8 @@ public final class CrawljaxConfiguration {
 		 *            The maximum depth the crawler can reach. The default is <code>2</code>.
 		 */
 		public CrawljaxConfigurationBuilder setMaximumDepth(int depth) {
-			Preconditions.checkArgument(depth > 1, "Time should larger than 1");
+			Preconditions.checkArgument(depth >= 0,
+			        "Depth should be 0 for infinite, or larger for a certain depth.");
 			config.maximumDepth = depth;
 			return this;
 		}
@@ -103,6 +109,7 @@ public final class CrawljaxConfiguration {
 		 *            The proxy configuration. Default is {@link ProxyConfiguration#noProxy()}
 		 */
 		public CrawljaxConfigurationBuilder setProxyConfig(ProxyConfiguration configuration) {
+			Preconditions.checkNotNull(configuration);
 			config.proxyConfiguration = configuration;
 			return this;
 		}
@@ -121,12 +128,13 @@ public final class CrawljaxConfiguration {
 		 *            {@link BrowserType#firefox} browser.
 		 */
 		public CrawljaxConfigurationBuilder setBrowserConfig(BrowserConfiguration configuration) {
+			Preconditions.checkNotNull(configuration);
 			config.browserConfig = configuration;
 			return this;
 		}
 
 		public CrawljaxConfiguration build() {
-			config.plugins = pluginBuilder.build();
+			config.plugins = new Plugins(pluginBuilder.build());
 			config.crawlRules = crawlRules.build();
 			return config;
 		}
@@ -159,7 +167,7 @@ public final class CrawljaxConfiguration {
 	private URL url;
 
 	private BrowserConfiguration browserConfig = new BrowserConfiguration(BrowserType.firefox);
-	private ImmutableList<Plugin> plugins;
+	private Plugins plugins;
 	private ProxyConfiguration proxyConfiguration = ProxyConfiguration.noProxy();
 
 	private CrawlRules crawlRules;
@@ -179,7 +187,7 @@ public final class CrawljaxConfiguration {
 		return browserConfig;
 	}
 
-	public ImmutableList<Plugin> getPlugins() {
+	public Plugins getPlugins() {
 		return plugins;
 	}
 
@@ -205,101 +213,38 @@ public final class CrawljaxConfiguration {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((browserConfig == null) ? 0 : browserConfig.hashCode());
-		result = prime * result + ((crawlRules == null) ? 0 : crawlRules.hashCode());
-		result = prime * result + maximumDepth;
-		result = prime * result + (int) (maximumRuntime ^ (maximumRuntime >>> 32));
-		result = prime * result + maximumStates;
-		result = prime * result + ((plugins == null) ? 0 : plugins.hashCode());
-		result =
-		        prime * result
-		                + ((proxyConfiguration == null) ? 0 : proxyConfiguration.hashCode());
-		result = prime * result + ((url == null) ? 0 : url.hashCode());
-		return result;
+		return Objects.hashCode(url, browserConfig, plugins, proxyConfiguration, crawlRules,
+		        maximumStates, maximumRuntime, maximumDepth);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
+	public boolean equals(Object object) {
+		if (object instanceof CrawljaxConfiguration) {
+			CrawljaxConfiguration that = (CrawljaxConfiguration) object;
+			return Objects.equal(this.url, that.url)
+			        && Objects.equal(this.browserConfig, that.browserConfig)
+			        && Objects.equal(this.plugins, that.plugins)
+			        && Objects.equal(this.proxyConfiguration, that.proxyConfiguration)
+			        && Objects.equal(this.crawlRules, that.crawlRules)
+			        && Objects.equal(this.maximumStates, that.maximumStates)
+			        && Objects.equal(this.maximumRuntime, that.maximumRuntime)
+			        && Objects.equal(this.maximumDepth, that.maximumDepth);
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		CrawljaxConfiguration other = (CrawljaxConfiguration) obj;
-		if (browserConfig == null) {
-			if (other.browserConfig != null) {
-				return false;
-			}
-		} else if (!browserConfig.equals(other.browserConfig)) {
-			return false;
-		}
-		if (crawlRules == null) {
-			if (other.crawlRules != null) {
-				return false;
-			}
-		} else if (!crawlRules.equals(other.crawlRules)) {
-			return false;
-		}
-		if (maximumDepth != other.maximumDepth) {
-			return false;
-		}
-		if (maximumRuntime != other.maximumRuntime) {
-			return false;
-		}
-		if (maximumStates != other.maximumStates) {
-			return false;
-		}
-		if (plugins == null) {
-			if (other.plugins != null) {
-				return false;
-			}
-		} else if (!plugins.equals(other.plugins)) {
-			return false;
-		}
-		if (proxyConfiguration == null) {
-			if (other.proxyConfiguration != null) {
-				return false;
-			}
-		} else if (!proxyConfiguration.equals(other.proxyConfiguration)) {
-			return false;
-		}
-		if (url == null) {
-			if (other.url != null) {
-				return false;
-			}
-		} else if (!url.equals(other.url)) {
-			return false;
-		}
-		return true;
+		return false;
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("CrawljaxConfiguration [url=");
-		builder.append(url);
-		builder.append(", browserConfig=");
-		builder.append(browserConfig);
-		builder.append(", plugins=");
-		builder.append(plugins);
-		builder.append(", proxyConfiguration=");
-		builder.append(proxyConfiguration);
-		builder.append(", crawlRules=");
-		builder.append(crawlRules);
-		builder.append(", maximumStates=");
-		builder.append(maximumStates);
-		builder.append(", maximumRuntime=");
-		builder.append(maximumRuntime);
-		builder.append(", maximumDepth=");
-		builder.append(maximumDepth);
-		builder.append("]");
-		return builder.toString();
+		return Objects.toStringHelper(this)
+		        .add("url", url)
+		        .add("browserConfig", browserConfig)
+		        .add("plugins", plugins)
+		        .add("proxyConfiguration", proxyConfiguration)
+		        .add("crawlRules", crawlRules)
+		        .add("maximumStates", maximumStates)
+		        .add("maximumRuntime", maximumRuntime)
+		        .add("maximumDepth", maximumDepth)
+		        .toString();
 	}
 
 }

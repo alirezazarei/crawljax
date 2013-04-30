@@ -51,7 +51,7 @@ public final class CrawljaxAdvancedExampleSettings {
 		builder.crawlRules().setInputSpec(getInputSpecification());
 
 		// This will generate a nice output in the output directory.
-		builder.addPlugin(new CrawlOverview(new File(outputDir)));
+		builder.addPlugin(new CrawlOverview(new File("output")));
 
 		CrawljaxController crawljax = new CrawljaxController(builder.build());
 		crawljax.run();
