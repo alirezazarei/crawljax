@@ -52,12 +52,12 @@ public class StateVertex implements Serializable {
 	private  LinkedBlockingDeque<CandidateCrawlAction> candidateActions =
 	        new LinkedBlockingDeque<>();;
 
-	private  final ConcurrentHashMap<Crawler, CandidateCrawlAction> registerdCandidateActions =
+	private   ConcurrentHashMap<Crawler, CandidateCrawlAction> registerdCandidateActions =
 	        new ConcurrentHashMap<>();
-	private  final ConcurrentHashMap<Crawler, CandidateCrawlAction> workInProgressCandidateActions =
+	private   ConcurrentHashMap<Crawler, CandidateCrawlAction> workInProgressCandidateActions =
 	        new ConcurrentHashMap<>();
 
-	private  final LinkedBlockingDeque<Crawler> registeredCrawlers = new LinkedBlockingDeque<>();
+	private   LinkedBlockingDeque<Crawler> registeredCrawlers = new LinkedBlockingDeque<>();
 
 	/**
 	 * Default constructor to support saving instances of this class as an XML.
@@ -427,5 +427,50 @@ public class StateVertex implements Serializable {
 		workInProgressCandidateActions.remove(crawler);
 		registeredCrawlers.remove(crawler);
 	}
+	
+	public LinkedBlockingDeque<CandidateCrawlAction> getCandidateActions() {
+		return candidateActions;
+	}
+	
+	public ConcurrentHashMap<Crawler, CandidateCrawlAction> getRegisterdCandidateActions() {
+		return registerdCandidateActions;
+	}
+	
+	public LinkedBlockingDeque<Crawler> getRegisteredCrawlers() {
+		return registeredCrawlers;
+	}
+	
+	public ConcurrentHashMap<Crawler, CandidateCrawlAction> getWorkInProgressCandidateActions() {
+		return workInProgressCandidateActions;
+	}
+	
+	public void setCandidateActions(
+			LinkedBlockingDeque<CandidateCrawlAction> candidateActions) {
+		this.candidateActions = candidateActions;
+	}
+	
+	public void setRegisterdCandidateActions(
+			ConcurrentHashMap<Crawler, CandidateCrawlAction> registerdCandidateActions) {
+		this.registerdCandidateActions = registerdCandidateActions;
+	}
+	
+	public void setRegisteredCrawlers(
+			LinkedBlockingDeque<Crawler> registeredCrawlers) {
+		this.registeredCrawlers = registeredCrawlers;
+	}
+	
+	public void setWorkInProgressCandidateActions(
+			ConcurrentHashMap<Crawler, CandidateCrawlAction> workInProgressCandidateActions) {
+		this.workInProgressCandidateActions = workInProgressCandidateActions;
+	}
+	
+	public boolean persistenceComparison (StateVertex other){
+		
+		
+		
+		return true;
+	}
+	
+	
 
 }

@@ -1,5 +1,7 @@
 package com.crawljax.core;
 
+import java.io.Serializable;
+
 import com.crawljax.core.state.Eventable.EventType;
 
 /**
@@ -7,7 +9,11 @@ import com.crawljax.core.state.Eventable.EventType;
  * 
  * @author Stefan Lenselink <S.R.Lenselink@student.tudelft.nl>
  */
-public class CandidateCrawlAction {
+public class CandidateCrawlAction implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5422091421933799343L;
 	private final CandidateElement candidateElement;
 	private final EventType eventType;
 
