@@ -1,5 +1,6 @@
 package com.crawljax.core;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
@@ -22,7 +23,11 @@ import com.google.common.base.Strings;
  * the same time will be the maximum of the number of Threads. If there are no more Threads left,
  * Crawlers will be stored in a workQueue until a Thread will become available.
  */
-public class CrawlerExecutor extends ThreadPoolExecutor {
+public class CrawlerExecutor extends ThreadPoolExecutor implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1591684230823793500L;
 	private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerExecutor.class);
 	/**
 	 * Counter for the number of Crawlers that in total have run. Every time a new Crawler beginning

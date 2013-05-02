@@ -1,5 +1,6 @@
 package com.crawljax.core;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -17,7 +18,12 @@ import com.crawljax.core.state.StateVertex;
  * 
  * @author mesbah
  */
-public class CrawlSession {
+public class CrawlSession implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2449097842671573739L;
 
 	/**
 	 * This variable holds the current stateFlowGraph.

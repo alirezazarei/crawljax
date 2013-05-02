@@ -1,6 +1,7 @@
 package com.crawljax.forms;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,7 +33,12 @@ import com.google.common.collect.ImmutableMap;
 /**
  * Helper class for FormHandler.
  */
-public final class FormInputValueHelper {
+public final class FormInputValueHelper implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6463692757295066317L;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(FormInputValueHelper.class
 	        .getName());

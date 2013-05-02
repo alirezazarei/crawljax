@@ -1,5 +1,6 @@
 package com.crawljax.core.configuration;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,8 +34,12 @@ import com.google.common.collect.Lists;
  * @see CrawlSpecification
  * @author DannyRoest@gmail.com (Danny Roest)
  */
-public final class CrawlElement {
+public final class CrawlElement implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5595939663146659947L;
 	private final String tagName;
 	private final List<Condition> conditions = Lists.newLinkedList();
 	private final String id;

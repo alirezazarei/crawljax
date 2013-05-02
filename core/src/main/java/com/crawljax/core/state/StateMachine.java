@@ -1,5 +1,7 @@
 package com.crawljax.core.state;
 
+import java.io.Serializable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +15,12 @@ import com.google.common.collect.ImmutableList;
 /**
  * The State Machine.
  */
-public class StateMachine {
+public class StateMachine implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7035846688791377695L;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(StateMachine.class.getName());
 
 	private final StateFlowGraph stateFlowGraph;

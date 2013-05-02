@@ -3,6 +3,7 @@
  */
 package com.crawljax.condition.invariant;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.crawljax.condition.Condition;
@@ -13,7 +14,12 @@ import com.crawljax.condition.ConditionType;
  * 
  * @author dannyroest@gmail.com (Danny Roest)
  */
-public class Invariant extends ConditionType {
+public class Invariant extends ConditionType implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -253689906256071810L;
 
 	/**
 	 * @param description

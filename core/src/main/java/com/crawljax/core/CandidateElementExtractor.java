@@ -1,6 +1,7 @@
 package com.crawljax.core;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -37,7 +38,12 @@ import com.google.common.collect.ImmutableSortedSet;
  * This class extracts candidate elements from the DOM tree, based on the tags provided by the user.
  * Elements can also be excluded.
  */
-public class CandidateElementExtractor {
+public class CandidateElementExtractor implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 15263001333589905L;
 
 	private static final Logger LOG = LoggerFactory.getLogger(CandidateElementExtractor.class);
 

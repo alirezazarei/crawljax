@@ -1,5 +1,6 @@
 package com.crawljax.core;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,7 +18,12 @@ import com.crawljax.condition.eventablecondition.EventableConditionChecker;
  * 
  * @author Stefan Lenselink <S.R.Lenselink@student.tudelft.nl>
  */
-public class CandidateElementManager implements ExtractorManager {
+public class CandidateElementManager implements ExtractorManager,Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6680159510641843091L;
+
 	/**
 	 * Use the AtomicInteger to prevent Problems when increasing.
 	 */

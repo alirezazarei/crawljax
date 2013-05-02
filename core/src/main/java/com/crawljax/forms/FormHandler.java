@@ -4,6 +4,7 @@
 package com.crawljax.forms;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +30,12 @@ import com.crawljax.util.XPathHelper;
  * Handles form values and fills in the form input elements with random values of the defined
  * values.
  */
-public class FormHandler {
+public class FormHandler implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6903723880215962884L;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(FormHandler.class.getName());
 
 	private boolean randomFieldValue = false;

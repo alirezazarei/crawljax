@@ -1,5 +1,6 @@
 package com.crawljax.core.state;
 
+import java.io.Serializable;
 import java.util.List;
 
 import com.google.common.collect.ForwardingList;
@@ -9,8 +10,12 @@ import com.google.common.collect.Lists;
 /**
  * The Path a Crawler has taken, or is about to backtrack on.
  */
-public class CrawlPath extends ForwardingList<Eventable> {
+public class CrawlPath extends ForwardingList<Eventable> implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5910282240653146846L;
 	private final List<Eventable> eventablePath;
 
 	/**

@@ -3,6 +3,7 @@
  */
 package com.crawljax.browser;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -24,7 +25,12 @@ import com.crawljax.core.plugin.Plugins;
 /**
  * The Pool class returns an instance of the desired browser as specified in the properties file.
  */
-public final class BrowserPool {
+public final class BrowserPool implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6478555345443365387L;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(BrowserPool.class);
 
