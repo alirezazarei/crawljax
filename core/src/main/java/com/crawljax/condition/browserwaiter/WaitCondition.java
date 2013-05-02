@@ -1,5 +1,6 @@
 package com.crawljax.condition.browserwaiter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +18,12 @@ import com.crawljax.browser.EmbeddedBrowser;
  * @author dannyroest@gmail.com (Danny Roest)
  */
 @ThreadSafe
-public class WaitCondition {
+public class WaitCondition implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7134826615249846459L;
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(WaitCondition.class.getName());
 
 	private static final int WAITTIME = 500;

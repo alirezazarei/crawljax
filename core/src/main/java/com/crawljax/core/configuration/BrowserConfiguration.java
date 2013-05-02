@@ -1,5 +1,6 @@
 package com.crawljax.core.configuration;
 
+import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.Immutable;
@@ -11,7 +12,12 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 @Immutable
-public class BrowserConfiguration {
+public class BrowserConfiguration implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 345052886869370025L;
 
 	/**
 	 * The total number of retries when a browser can not be created.

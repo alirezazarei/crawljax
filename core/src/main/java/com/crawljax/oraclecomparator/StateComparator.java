@@ -1,5 +1,6 @@
 package com.crawljax.oraclecomparator;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +20,12 @@ import com.crawljax.oraclecomparator.comparators.SimpleComparator;
  * @author dannyroest@gmail.com (Danny Roest)
  */
 @ThreadSafe
-public class StateComparator {
+public class StateComparator implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -517721180390557686L;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(StateComparator.class.getName());
 

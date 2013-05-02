@@ -1,5 +1,6 @@
 package com.crawljax.core;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.w3c.dom.Element;
@@ -16,7 +17,12 @@ import com.google.common.collect.ImmutableSet;
  * Candidate element for crawling. It is possible to link this eventable to form inputs, so that
  * crawljax knows which values to set for this elements before it is clicked.
  */
-public class CandidateElement {
+public class CandidateElement implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2312235228712780813L;
 
 	private final Identification identification;
 

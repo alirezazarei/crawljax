@@ -1,5 +1,6 @@
 package com.crawljax.condition.eventablecondition;
 
+import java.io.Serializable;
 import java.util.List;
 
 import javax.xml.xpath.XPathExpressionException;
@@ -19,8 +20,12 @@ import com.google.common.collect.ImmutableList.Builder;
 /**
  * Check whether the conditions of an eventable are satisfied.
  */
-public class EventableConditionChecker {
+public class EventableConditionChecker implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 425987471378016885L;
 	private static final Logger LOG = LoggerFactory.getLogger(EventableConditionChecker.class);
 	private final ImmutableList<EventableCondition> eventableConditions;
 

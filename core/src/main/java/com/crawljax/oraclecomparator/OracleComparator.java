@@ -1,5 +1,6 @@
 package com.crawljax.oraclecomparator;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +14,12 @@ import com.crawljax.condition.Condition;
  * @author danny
  */
 @Immutable
-public class OracleComparator {
+public class OracleComparator implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2541160000125823093L;
 	private final List<Condition> preConditions = new ArrayList<Condition>();
 	private final String id;
 	private final Comparator oracle;

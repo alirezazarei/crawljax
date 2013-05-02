@@ -2,6 +2,7 @@ package com.crawljax.core.plugin;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,12 @@ import com.google.common.collect.Lists;
 /**
  * Class for invoking plugins. The methods in this class are invoked from the Crawljax Core.
  */
-public final class Plugins {
+public final class Plugins implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6332464903668699048L;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Plugins.class.getName());
 

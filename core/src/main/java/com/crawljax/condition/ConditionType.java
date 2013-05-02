@@ -3,6 +3,7 @@
  */
 package com.crawljax.condition;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,8 +17,12 @@ import net.jcip.annotations.ThreadSafe;
  * @author dannyroest@gmail.com (Danny Roest)
  */
 @ThreadSafe
-public abstract class ConditionType {
+public abstract class ConditionType implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3604840691909962481L;
 	private final List<Condition> preConditions = new ArrayList<Condition>();
 	private final String description;
 	private final Condition condition;

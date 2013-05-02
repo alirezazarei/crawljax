@@ -1,5 +1,6 @@
 package com.crawljax.core;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -37,7 +38,12 @@ import com.crawljax.util.UrlUtils;
 /**
  * Class that performs crawl actions. It is designed to run inside a Thread.
  */
-public class Crawler implements Runnable {
+public class Crawler implements Runnable, Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -415389645440418644L;
 
 	private static final Logger LOG = LoggerFactory.getLogger(Crawler.class);
 

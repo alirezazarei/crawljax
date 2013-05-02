@@ -1,5 +1,6 @@
 package com.crawljax.condition.eventablecondition;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +14,12 @@ import com.crawljax.util.XPathHelper;
  * order to crawl the element. The user does not need this class when using the API. Only for use
  * with properties files .
  */
-public class EventableCondition {
+public class EventableCondition implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7988645418446590775L;
 	private final String id;
 	private List<Condition> conditions = new ArrayList<Condition>();
 	private String inXPath;

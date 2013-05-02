@@ -1,5 +1,6 @@
 package com.crawljax.core;
 
+import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
 import net.jcip.annotations.GuardedBy;
@@ -23,7 +24,12 @@ import com.google.common.collect.ImmutableList;
 /**
  * The Crawljax Controller class is the core of Crawljax.
  */
-public class CrawljaxController implements CrawlQueueManager {
+public class CrawljaxController implements CrawlQueueManager, Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5419808510577113118L;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CrawljaxController.class
 	        .getName());

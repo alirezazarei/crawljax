@@ -2,6 +2,7 @@ package com.crawljax.core.configuration;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +20,12 @@ import com.google.common.collect.ImmutableList;
 /**
  * Configures the {@link Crawler}. Set it up using the {@link #builderFor(String)} function.
  */
-public final class CrawljaxConfiguration {
+public final class CrawljaxConfiguration implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4714516155597982264L;
 
 	public static class CrawljaxConfigurationBuilder {
 
