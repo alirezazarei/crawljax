@@ -24,9 +24,9 @@ import com.crawljax.core.plugin.Plugin;
 public class StateFlowGraphPersistenceTest {
 	
 	
-	private static final String URL = "http://www.google.com";
+	private static final String URL = "http://localhost/domChangeTest/pluginTestFirst.htm";
 	private static final int MAX_CRAWL_DEPTH = 2;
-	private static final int MAX_STATES = 10;
+	private static final int MAX_STATES = 3;
 
 
 	/**
@@ -37,6 +37,11 @@ public class StateFlowGraphPersistenceTest {
 		
 		CrawljaxConfigurationBuilder builder = CrawljaxConfiguration.builderFor(URL);
 		builder.crawlRules().clickDefaultElements();
+		builder.crawlRules().click("h1");
+		builder.crawlRules().click("h2");
+		builder.crawlRules().click("span");
+		builder.crawlRules().click("div");
+
 
 		// limit the crawling scope
 		builder.setMaximumStates(MAX_STATES);
