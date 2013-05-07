@@ -25,9 +25,12 @@ import com.crawljax.core.plugin.PostCrawlingPlugin;
 public class StateFlowGraphPersistenceTest {
 	
 	
-	private static final String URL = "http://localhost/domChangeTest/pluginTestFirst.htm";
+//	private static final String URL = "http://localhost/domChangeTest/pluginTestFirst.htm";
+	
+	private static final String URL = "http://www.google.com";
+
 	private static final int MAX_CRAWL_DEPTH = 2;
-	private static final int MAX_STATES = 3;
+	private static final int MAX_STATES = 10;
 
 
 	/**

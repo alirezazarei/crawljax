@@ -3,6 +3,9 @@
  */
 package com.crawljax.core.state;
 
+import org.apache.http.client.methods.AbortableHttpRequest;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 /**
@@ -61,6 +64,24 @@ public class GraphDatabaseHolder implements Runnable {
 
 		com.crawljax.core.state.StateFlowGraph.setEdgesIndex(
 				com.crawljax.core.state.StateFlowGraph.getIndexManager().forRelationships(EDGES_INDEX_NAME));
+
+		Node mainNode = null;
+		Transaction tx = com.crawljax.core.state.StateFlowGraph.getSfgDb().beginTx();
+		try{
+		 mainNode = com.crawljax.core.state.StateFlowGraph.getSfgDb().createNode();
+			mainNode.setProperty("type", "indexing");
+			
+		tx.success();
+		}finally{
+			tx.finish();
+		}
+		
+		
+		if(mainNode == null)
+			System.exit(1);
+		com.crawljax.core.state.StateFlowGraph.manualIndexer = mainNode;
+
+		
 
 
 		com.crawljax.core.state.StateFlowGraph.setStatus(1);		
