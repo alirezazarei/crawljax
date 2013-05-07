@@ -16,6 +16,7 @@ import com.crawljax.core.configuration.InputSpecification;
 import com.crawljax.core.configuration.CrawljaxConfiguration.CrawljaxConfigurationBuilder;
 import com.crawljax.core.plugin.OnNewStatePlugin;
 import com.crawljax.core.plugin.Plugin;
+import com.crawljax.core.plugin.PostCrawlingPlugin;
 
 /**
  * @author arz
@@ -51,12 +52,18 @@ public class StateFlowGraphPersistenceTest {
 		Plugin p =new TestSerializeStateVertex();
 		
 		builder.addPlugin(p);
+		
+		Plugin p2 = new Post();
+		
+		builder.addPlugin(p2);
 	
 
 		builder.crawlRules().setInputSpec(getInputSpecification());
 
 		CrawljaxController crawljax = new CrawljaxController(builder.build());
 		crawljax.run();
+		com.crawljax.core.state.StateFlowGraph.setStatus(2);		
+		
 
 	}
 	
@@ -120,6 +127,19 @@ public class StateFlowGraphPersistenceTest {
 	@Test
 	public void testDeserializeEventableByteArray() {
 	
+	}
+	
+	private class Post implements PostCrawlingPlugin {
+
+		@Override
+		public void postCrawling(CrawlSession session) {
+			// TODO Auto-generated method stub
+			
+			com.crawljax.core.state.StateFlowGraph.setStatus(2);		
+			
+			
+		}
+		
 	}
 	
 

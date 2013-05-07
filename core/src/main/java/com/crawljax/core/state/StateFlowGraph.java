@@ -64,6 +64,15 @@ public class StateFlowGraph implements Serializable {
 
 	private final StateVertex initialState;
 
+	
+	// The status of the graph database as follows:
+	// 0: database has not been created yet
+	// 1: database has been created and the thread is running
+	// 2: set this flag to this value to let the controller terminate the 
+	// the thread holding the database
+	
+	private static int status ;
+	
 	// The directory path for saving the graph database created by neo4j for
 	// storing the state flow graph
 
@@ -71,7 +80,7 @@ public class StateFlowGraph implements Serializable {
 
 	// the connector or access point to the graph database
 
-	private final GraphDatabaseService sfgDb;
+	private static GraphDatabaseService sfgDb ;
 
 	// keys used for key-value pairs. The key-value pairs are the main place
 	// holder
@@ -109,6 +118,14 @@ public class StateFlowGraph implements Serializable {
 	// indexing data structures for fast retrieval
 	private static Index<Node> nodeIndex;
 	private static Index<Relationship> edgesIndex;
+	
+	public static void setNodeIndex(Index<Node> nodeIndex) {
+		StateFlowGraph.nodeIndex = nodeIndex;
+	}
+	
+	public static void setEdgesIndex(Index<Relationship> edgesIndex) {
+		StateFlowGraph.edgesIndex = edgesIndex;
+	}
 
 	// The edges in the graph are modeled as relationships between nodes.
 	// These relationships have enum names and they also are able to have
@@ -135,29 +152,46 @@ public class StateFlowGraph implements Serializable {
 
 		Preconditions.checkNotNull(initialState);
 
-		// creating the graph database
+//		// creating the graph database
+//
+//		// get the database to rewrite on previous database file
+//		// each time it is initiated
+//
+//		// fresh is used to ensure that every time we run the program a
+//		// fresh empty database is used for storing the data
+//
+//		long fresh = System.nanoTime();
+//		String path = DB_PATH + fresh;
+//		sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(path);
+//
 
-		// get the database to rewrite on previous database file
-		// each time it is initiated
+		
+		status = 0;
+		LOG.info("creating database");
 
-		// fresh is used to ensure that every time we run the program a
-		// fresh empty database is used for storing the data
+		Thread t = new Thread( new GraphDatabaseHolder(), "graph database holder");
+		t.start();
+		
+		while (status==0)
+		{
+			LOG.debug("database not created yet");
+		}
+		
+		LOG.info("database created");
 
-		long fresh = System.nanoTime();
-		String path = DB_PATH + fresh;
-		sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(path);
-
-		// for quick indexing and retrieval of nodes. This data structure is a
-		// additional
-		// capability beside
-		// the main graph data structures which is comprised of nodes and edges
-
-		nodeIndex = sfgDb.index().forNodes(NODES_INDEX_NAME);
-
-		// again similar to nodeIndex this is a cross indexing of the edges for
-		// fast retrieval
-
-		edgesIndex = sfgDb.index().forRelationships(EDGES_INDEX_NAME);
+	
+//		// for quick indexing and retrieval of nodes. This data structure is a
+//		// additional
+//		// capability beside
+//		// the main graph data structures which is comprised of nodes and edges
+//	
+//		
+//		nodeIndex = sfgDb.index().forNodes(NODES_INDEX_NAME);
+//
+//		// again similar to nodeIndex this is a cross indexing of the edges for
+//		// fast retrieval
+//
+//		edgesIndex = sfgDb.index().forRelationships(EDGES_INDEX_NAME);
 
 		// adding the first node to the graph
 		this.putIfAbsent(initialState,false);
@@ -991,6 +1025,21 @@ public class StateFlowGraph implements Serializable {
 	 */
 	public int getNumberOfStates() {
 		return stateCounter.get();
+	}
+	
+	public static void setSfgDb(GraphDatabaseService sfgDb) {
+		StateFlowGraph.sfgDb = sfgDb;
+	}
+	
+	public static GraphDatabaseService getSfgDb() {
+		return sfgDb;
+	}
+	
+	public static void setStatus(int status) {
+		StateFlowGraph.status = status;
+	}
+	public static int getStatus() {
+		return status;
 	}
 
 }

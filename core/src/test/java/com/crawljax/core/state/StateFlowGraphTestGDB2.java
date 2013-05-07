@@ -1,5 +1,9 @@
 package com.crawljax.core.state;
 
+/**
+ *  this class tests the newest version of stateflograph with graph database
+ */
+
 import static com.crawljax.browser.matchers.StateFlowGraphMatchers.hasEdges;
 import static org.junit.Assert.*;
 
