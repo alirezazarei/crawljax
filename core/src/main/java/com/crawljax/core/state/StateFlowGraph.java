@@ -32,6 +32,8 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexHits;
+import org.neo4j.graphdb.index.IndexManager;
+import org.neo4j.graphdb.index.RelationshipIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.neo4j.helpers.UTF8;
@@ -114,16 +116,27 @@ public class StateFlowGraph implements Serializable {
 
 	// the id used for the for edge indexer object
 	private static final String EDGES_INDEX_NAME = "edges";
+	
+	// index manager
+	private static IndexManager indexManager ;
+	
+	public static void setIndexManager(IndexManager index) {
+		StateFlowGraph.indexManager = index;
+	}
+	
+	public static IndexManager getIndexManager() {
+		return indexManager;
+	}
 
 	// indexing data structures for fast retrieval
 	private static Index<Node> nodeIndex;
-	private static Index<Relationship> edgesIndex;
+	private static RelationshipIndex edgesIndex;
 	
 	public static void setNodeIndex(Index<Node> nodeIndex) {
 		StateFlowGraph.nodeIndex = nodeIndex;
 	}
 	
-	public static void setEdgesIndex(Index<Relationship> edgesIndex) {
+	public static void setEdgesIndex(RelationshipIndex edgesIndex) {
 		StateFlowGraph.edgesIndex = edgesIndex;
 	}
 
@@ -834,6 +847,7 @@ public class StateFlowGraph implements Serializable {
 
 		final Set<StateVertex> allStates = new HashSet<StateVertex>();
 
+		
 		for (Node node : nodeIndex.query(STRIPPED_DOM_KEY, "*")) {
 
 			byte[] serializedNode = (byte[]) node.getProperty(STATE_VERTEX_KEY);
@@ -856,14 +870,23 @@ public class StateFlowGraph implements Serializable {
 
 		final Set<Eventable> all = new HashSet<Eventable>();
 
-		for (Relationship edge : edgesIndex.query(EDGE_COMBNINED_KEY, "*")) {
 
-			byte[] serializededge = (byte[]) edge.getProperty(CLICKABLE_KEY);
+		Transaction tx = sfgDb.beginTx();
+		try{
 
-			Eventable eventable = deserializeEventable(serializededge, 1);
+			for (Relationship edge : edgesIndex.query(EDGE_COMBNINED_KEY, "*")) {
 
-			all.add(eventable);
+				byte[] serializededge = (byte[]) edge.getProperty(CLICKABLE_KEY);
 
+				Eventable eventable = deserializeEventable(serializededge, 1);
+
+				all.add(eventable);
+
+
+			}
+			tx.success();}
+		finally{
+			tx.finish();
 		}
 
 		return all;

@@ -18,7 +18,7 @@ public class GraphDatabaseHolder implements Runnable {
 	// The directory path for saving the graph database created by neo4j for
 	// storing the state flow graph
 
-	private static final String DB_PATH = "target/state-flow-graph-db/Fresh_";
+	private static final String DB_PATH = "/Users/arz/Documents/state-flow-graph-db/Fresh_";
 
 	
 	
@@ -50,23 +50,23 @@ public class GraphDatabaseHolder implements Runnable {
 				new GraphDatabaseFactory().newEmbeddedDatabase(path));
 		
 		
+		com.crawljax.core.state.StateFlowGraph.setIndexManager(
+				com.crawljax.core.state.StateFlowGraph.getSfgDb().index());
 		
 		com.crawljax.core.state.StateFlowGraph.setNodeIndex(
-				com.crawljax.core.state.StateFlowGraph.getSfgDb().index().forNodes(NODES_INDEX_NAME));
+				com.crawljax.core.state.StateFlowGraph.getIndexManager().forNodes(NODES_INDEX_NAME));
 
 		// again similar to nodeIndex this is a cross indexing of the edges for
 		// fast retrieval
 
 		com.crawljax.core.state.StateFlowGraph.setEdgesIndex(
-				com.crawljax.core.state.StateFlowGraph.getSfgDb().index().forRelationships(EDGES_INDEX_NAME));
+				com.crawljax.core.state.StateFlowGraph.getIndexManager().forRelationships(EDGES_INDEX_NAME));
 
 
 		com.crawljax.core.state.StateFlowGraph.setStatus(1);		
 		
 		while(com.crawljax.core.state.StateFlowGraph.getStatus() < 2)
 		{
-			
-			System.out.println("db running");
 		}
 		
 
