@@ -86,10 +86,10 @@ public class GraphDatabaseHolder implements Runnable {
 
 		com.crawljax.core.state.StateFlowGraph.setStatus(1);		
 		
-		while(com.crawljax.core.state.StateFlowGraph.getStatus() < 2)
-		{
-		}
-		
+//		while(com.crawljax.core.state.StateFlowGraph.getStatus() < 2)
+//		{
+//		}
+//		
 
 	}
 

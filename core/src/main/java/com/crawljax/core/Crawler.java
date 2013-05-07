@@ -170,10 +170,17 @@ public class Crawler implements Runnable, Serializable {
 		}
 
 		try {
-			if (backTrackPath.last() != null
-			        && !backTrackPath.last().getTargetStateVertex().startWorking(this)) {
-				LOG.warn("Could not register crawler. Quitting");
-				return;
+			if (backTrackPath.last() != null){
+
+				String s= backTrackPath.toString();
+
+				Eventable e = backTrackPath.last();
+				StateVertex sv = e.getTargetStateVertex();
+				
+				if(	!backTrackPath.last().getTargetStateVertex().startWorking(this)) {
+					LOG.warn("Could not register crawler. Quitting");
+					return;
+				}
 			}
 
 			try {
