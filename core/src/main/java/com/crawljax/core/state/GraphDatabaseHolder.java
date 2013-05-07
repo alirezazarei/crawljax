@@ -79,7 +79,7 @@ public class GraphDatabaseHolder implements Runnable {
 		
 		if(mainNode == null)
 			System.exit(1);
-		com.crawljax.core.state.StateFlowGraph.manualIndexer = mainNode;
+		com.crawljax.core.state.StateFlowGraph.structuralIndexer = mainNode;
 
 		
 

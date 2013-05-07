@@ -117,7 +117,7 @@ public class StateFlowGraph implements Serializable {
 	// the id used for the for edge indexer object
 	private static final String EDGES_INDEX_NAME = "edges";
 	
-	public static Node manualIndexer;
+	public static Node structuralIndexer;
 	
 	// index manager
 	private static IndexManager indexManager ;
@@ -649,7 +649,7 @@ public class StateFlowGraph implements Serializable {
 
 		}
 		nodeIndex.add(toBeAddedNode, STRIPPED_DOM_KEY, StrippedDom);
-		manualIndexer.createRelationshipTo(toBeAddedNode, RelTypes.INDEXES);
+		structuralIndexer.createRelationshipTo(toBeAddedNode, RelTypes.INDEXES);
 
 		return null;
 	}
@@ -852,7 +852,7 @@ public class StateFlowGraph implements Serializable {
 
 		
 //		for (Node node : nodeIndex.query(STRIPPED_DOM_KEY, "*")) {
-		for (Relationship relationship: manualIndexer.getRelationships(Direction.OUTGOING, RelTypes.INDEXES)){
+		for (Relationship relationship: structuralIndexer.getRelationships(Direction.OUTGOING, RelTypes.INDEXES)){
 
 
 			Node node = relationship.getEndNode();
@@ -885,7 +885,7 @@ public class StateFlowGraph implements Serializable {
 
 			//		for (Relationship edge : edgesIndex.query(EDGE_COMBNINED_KEY, "*")) {
 
-			for (Relationship relationship: manualIndexer.getRelationships(Direction.OUTGOING, RelTypes.INDEXES)){
+			for (Relationship relationship: structuralIndexer.getRelationships(Direction.OUTGOING, RelTypes.INDEXES)){
 				for (Relationship edge:relationship.getEndNode().getRelationships(Direction.OUTGOING, RelTypes.TRANSITIONS_TO)){
 
 					byte[] serializededge = (byte[]) edge.getProperty(CLICKABLE_KEY);
