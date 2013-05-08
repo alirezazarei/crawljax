@@ -2,6 +2,7 @@ package com.crawljax.browser;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -56,11 +57,15 @@ import com.google.common.collect.ImmutableSortedSet;
  * @version $Id: WebDriverBackedEmbeddedBrowser.java 387 2010-07-13 13:55:49Z slenselink@google.com
  *          $
  */
-public final class WebDriverBackedEmbeddedBrowser implements EmbeddedBrowser {
+public final class WebDriverBackedEmbeddedBrowser implements EmbeddedBrowser, Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 9114043936884130693L;
 	private long crawlWaitEvent;
 	private static final Logger LOGGER = LoggerFactory
 	        .getLogger(WebDriverBackedEmbeddedBrowser.class);
-	private final WebDriver browser;
+	private transient final WebDriver browser;
 
 	private ImmutableSortedSet<String> filterAttributes;
 	private long crawlWaitReload;

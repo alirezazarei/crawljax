@@ -277,9 +277,29 @@ public class Eventable extends DefaultEdge implements Serializable {
 
 			if (name.equals(fieldName)) {
 				return field;
+
 			}
 		}
 		throw new InternalError("Field was not found!");
+	}
+	
+	public void setSourceStateVertex(StateVertex source){
+		setSuperSuperField("source",source);
+	}
+	
+	public void setTargetStateVertex(StateVertex target){
+		setSuperSuperField("target",target);
+	}
+
+	private void setSuperSuperField(String name, Object obj) {
+		
+		try {
+			 searchSuperField(name).set(this,obj);
+		} catch (IllegalArgumentException e) {
+			throw new CrawljaxException(e.getMessage(), e);
+		} catch (IllegalAccessException e) {
+			throw new CrawljaxException(e.getMessage(), e);
+		}
 	}
 
 	/**

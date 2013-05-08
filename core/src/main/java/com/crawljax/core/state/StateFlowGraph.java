@@ -414,7 +414,15 @@ public class StateFlowGraph implements Serializable {
 	public boolean addEdge(StateVertex sourceVert, StateVertex targetVert,
 			Eventable eventable) {
 		boolean exists = false;
+		
+		// this is done automatically with jgraphT
+		
+		
 		byte[] serializedEventable = serializeEventable(eventable, 1);
+		
+		eventable.setSourceStateVertex(sourceVert);
+		eventable.setTargetStateVertex(targetVert);
+		
 
 		// for (Relationship relationship: edgesIndex.get(SOURCE_KEY,
 		// sourceVert.getStrippedDom().getBytes())){
