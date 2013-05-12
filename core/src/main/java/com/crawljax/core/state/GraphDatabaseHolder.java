@@ -21,7 +21,7 @@ public class GraphDatabaseHolder implements Runnable {
 	// The directory path for saving the graph database created by neo4j for
 	// storing the state flow graph
 
-	private static final String DB_PATH = "/Users/arz/Documents/state-flow-graph-db/Fresh_";
+	private static  String DB_PATH = "/Users/arz/Documents/state-flow-graph-db/Fresh_";
 
 	
 	
@@ -47,28 +47,31 @@ public class GraphDatabaseHolder implements Runnable {
 		// fresh empty database is used for storing the data
 
 		long fresh = System.nanoTime();
-		String path = DB_PATH + fresh;
+		 DB_PATH = DB_PATH + fresh;
+		 
+		 StateFlowGraph.DB_PATH = DB_PATH;
 		
-		com.crawljax.core.state.StateFlowGraph.setSfgDb(
-				new GraphDatabaseFactory().newEmbeddedDatabase(path));
+		StateFlowGraph.setSfgDb(
+				new GraphDatabaseFactory().newEmbeddedDatabase(DB_PATH));
 		
 		
-		com.crawljax.core.state.StateFlowGraph.setIndexManager(
-				com.crawljax.core.state.StateFlowGraph.getSfgDb().index());
+		StateFlowGraph.setIndexManager(
+				StateFlowGraph.getSfgDb().index());
 		
-		com.crawljax.core.state.StateFlowGraph.setNodeIndex(
-				com.crawljax.core.state.StateFlowGraph.getIndexManager().forNodes(NODES_INDEX_NAME));
+		StateFlowGraph.setNodeIndex(
+				StateFlowGraph.getIndexManager().forNodes(NODES_INDEX_NAME));
 
 		// again similar to nodeIndex this is a cross indexing of the edges for
 		// fast retrieval
 
-		com.crawljax.core.state.StateFlowGraph.setEdgesIndex(
-				com.crawljax.core.state.StateFlowGraph.getIndexManager().forRelationships(EDGES_INDEX_NAME));
+
+		StateFlowGraph.setEdgesIndex(
+				StateFlowGraph.getIndexManager().forRelationships(EDGES_INDEX_NAME));
 
 		Node mainNode = null;
-		Transaction tx = com.crawljax.core.state.StateFlowGraph.getSfgDb().beginTx();
+		Transaction tx = StateFlowGraph.getSfgDb().beginTx();
 		try{
-		 mainNode = com.crawljax.core.state.StateFlowGraph.getSfgDb().createNode();
+		 mainNode = StateFlowGraph.getSfgDb().createNode();
 			mainNode.setProperty("type", "indexing");
 			
 		tx.success();
@@ -79,7 +82,9 @@ public class GraphDatabaseHolder implements Runnable {
 		
 		if(mainNode == null)
 			System.exit(1);
-		com.crawljax.core.state.StateFlowGraph.structuralIndexer = mainNode;
+		StateFlowGraph.structuralIndexer = mainNode;
+//		StateFlowGraph.getSfgDb().getReferenceNode().createRelationshipTo(mainNode, RelTypes.REFRENCES);
+
 
 		
 

@@ -5,9 +5,16 @@ package com.crawljax.core.state;
 
 import static org.junit.Assert.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.kernel.EmbeddedReadOnlyGraphDatabase;
 
 import com.crawljax.core.CrawlSession;
 import com.crawljax.core.CrawljaxController;
@@ -22,12 +29,12 @@ import com.crawljax.core.plugin.PostCrawlingPlugin;
  * @author arz
  *
  */
-public class StateFlowGraphPersistenceTest {
+public class StateFlowGraphCorrectNess {
 	
 	
-//	private static final String URL = "http://localhost/domChangeTest/pluginTestFirst.htm";
+	private static final String URL = "http://localhost/domChangeTest/pluginTestFirst.htm";
 	
-	private static final String URL = "http://www.google.com";
+//	private static final String URL = "http://www.google.com";
 
 	private static final int MAX_CRAWL_DEPTH = 2;
 	private static final int MAX_STATES = 10;
@@ -140,6 +147,50 @@ public class StateFlowGraphPersistenceTest {
 			// TODO Auto-generated method stub
 			
 			com.crawljax.core.state.StateFlowGraph.setStatus(2);		
+			
+			String dbpath = StateFlowGraph.DB_PATH;
+			
+			session.getStateFlowGraph();
+			GraphDatabaseService sfgDB =	 StateFlowGraph.getSfgDb();
+			
+			sfgDB.shutdown();
+			
+			
+			try {
+				Thread.sleep(15000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			sfgDB = new GraphDatabaseFactory().newEmbeddedDatabase( dbpath );
+			
+			
+			
+			
+			Node structuralIndexer = sfgDB.getReferenceNode().getSingleRelationship(RelTypes.REFRENCES,Direction.OUTGOING).getEndNode();
+			
+			String string = (String)structuralIndexer.getProperty("type",null);
+			
+			Set<StateVertex> states = new HashSet<StateVertex>();
+			
+			for ( Relationship relationship : structuralIndexer.getRelationships(Direction.OUTGOING)){
+				
+
+				Node stateNode =relationship.getEndNode();
+
+				
+
+				byte [] serializedState = (byte[])stateNode.getProperty(StateFlowGraph.STATE_VERTEX_KEY);
+				
+				StateVertex state = StateFlowGraph.deserializeStateVertex(serializedState);
+				
+				states.add(state);
+				
+				
+			}
+			
+			assertTrue("number of states not true", states.size() == 3);
 			
 			
 		}

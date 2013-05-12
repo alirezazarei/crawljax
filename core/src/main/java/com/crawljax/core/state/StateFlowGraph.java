@@ -78,7 +78,7 @@ public class StateFlowGraph implements Serializable {
 	// The directory path for saving the graph database created by neo4j for
 	// storing the state flow graph
 
-	private static final String DB_PATH = "target/state-flow-graph-db/Fresh_";
+	public static  String DB_PATH ;//= "target/state-flow-graph-db/Fresh_";
 
 	// the connector or access point to the graph database
 
@@ -91,31 +91,31 @@ public class StateFlowGraph implements Serializable {
 	// of the graph as "properties"
 
 	// the key for storing the persisted StateVertex objects
-	private static final String STATE_VERTEX_KEY = "stateVertex";
+	public static final String STATE_VERTEX_KEY = "stateVertex";
 
 	// the key for storing the DOM objects
-	private static final String STRIPPED_DOM_KEY = "strippedDOM";
+	public static final String STRIPPED_DOM_KEY = "strippedDOM";
 
 	// the key for storing the persisted source StateVertex objects
-	private static final String SOURCE_KEY = "source";
+	public static final String SOURCE_KEY = "source";
 
 	// the key for storing the persisted source target StateVertex objects
-	private static final String TARGET_KEY = "target";
+	public static final String TARGET_KEY = "target";
 
 	// the key for storing the persisted Eventable objects
-	private static final String CLICKABLE_KEY = "clickable";
+	public static final String CLICKABLE_KEY = "clickable";
 
 	// the combined key for storing the persisted triples of
 	// (source StateVertex,Eventable,target StateVertex) saved in a string array
 	// of length 3
 	// this is used for indexing edges
-	private static final String EDGE_COMBNINED_KEY = "edgeCombined";
+	public static final String EDGE_COMBNINED_KEY = "edgeCombined";
 
 	// the id used for the for node indexer object
-	private static final String NODES_INDEX_NAME = "nodes";
+	public static final String NODES_INDEX_NAME = "nodes";
 
 	// the id used for the for edge indexer object
-	private static final String EDGES_INDEX_NAME = "edges";
+	public static final String EDGES_INDEX_NAME = "edges";
 	
 	public static Node structuralIndexer;
 	
@@ -142,20 +142,6 @@ public class StateFlowGraph implements Serializable {
 		StateFlowGraph.edgesIndex = edgesIndex;
 	}
 
-	// The edges in the graph are modeled as relationships between nodes.
-	// These relationships have enum names and they also are able to have
-	// properties for holding the data associated with the edges in the
-	// application
-
-	// the relationship between a source vertex and the destination vertex
-
-	private static enum RelTypes implements RelationshipType {
-
-		// there is a directed edge from state A to state B
-		// if there is a clickable in state A which transitions from A to B.
-
-		TRANSITIONS_TO,INDEXES
-	}
 
 	/**
 	 * The constructor.
@@ -193,6 +179,8 @@ public class StateFlowGraph implements Serializable {
 		}
 		
 		LOG.info("database created");
+		
+
 
 	
 //		// for quick indexing and retrieval of nodes. This data structure is a
