@@ -5,7 +5,9 @@ package com.crawljax.core.state;
 
 import static org.junit.Assert.*;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
@@ -68,7 +70,6 @@ public class StateFlowGraphCorrectNess {
 
 		CrawljaxController crawljax = new CrawljaxController(builder.build());
 		crawljax.run();
-		com.crawljax.core.state.StateFlowGraph.setStatus(2);		
 		
 
 	}
@@ -96,22 +97,22 @@ public class StateFlowGraphCorrectNess {
 			GraphDatabaseService sfgDB =	 StateFlowGraph.getSfgDb();
 
 			
-//			sfgDB.shutdown();
-//			
-//			
-//			try {
-//				Thread.sleep(15000);
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}		
-//			
-//			String dbpath = StateFlowGraph.DB_PATH;
-//	
-//			sfgDB = new GraphDatabaseFactory().newEmbeddedDatabase( dbpath );
-//			
-//			
-//			
+			sfgDB.shutdown();
+			
+			
+			try {
+				Thread.sleep(15000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}		
+			
+			String dbpath = StateFlowGraph.DB_PATH;
+	
+			sfgDB = new GraphDatabaseFactory().newEmbeddedDatabase( dbpath );
+			
+			
+			
 
 			Node structuralIndexer = null;
 
@@ -141,19 +142,41 @@ public class StateFlowGraphCorrectNess {
 //			
 		
 			Set<StateVertex> states = new HashSet<StateVertex>();
+			Map<String, Set<Eventable>> edgesMap = new HashMap<String, Set<Eventable>>();
 			
 			for ( Relationship relationship : structuralIndexer.getRelationships(Direction.OUTGOING,RelTypes.INDEXES)){
 				
 
-				Node stateNode =relationship.getEndNode();
+				Set<Eventable> edges =  new HashSet<Eventable>();
 
-				
+				Node stateNode =relationship.getEndNode();
 
 				byte [] serializedState = (byte[])stateNode.getProperty(StateFlowGraph.STATE_VERTEX_KEY);
 				
-				StateVertex state = StateFlowGraph.deserializeStateVertex(serializedState);
+				StateVertex source = StateFlowGraph.deserializeStateVertex(serializedState);
 				
-				states.add(state);
+				states.add(source);
+				
+				for (Relationship r:	stateNode.getRelationships(Direction.OUTGOING,RelTypes.TRANSITIONS_TO)){
+					
+					
+
+					 byte[] serEdge = (byte[])r.getProperty(StateFlowGraph.CLICKABLE_KEY,null);
+					Eventable edge = StateFlowGraph.deserializeEventable(serEdge, 0);
+					
+					Node targetNode = r.getEndNode();
+
+					byte [] serTarget = (byte[]) targetNode.getProperty(StateFlowGraph.STATE_VERTEX_KEY,null);
+					StateVertex target = StateFlowGraph.deserializeStateVertex(serTarget);
+					edge.setTargetStateVertex(target);
+					
+					edges.add(edge);
+					
+					
+				}
+				edgesMap.put(source.getStrippedDom(), edges);
+				
+				
 				
 				
 			}
