@@ -4,7 +4,9 @@
 package com.crawljax.core.state;
 
 import org.apache.http.client.methods.AbortableHttpRequest;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
@@ -83,6 +85,9 @@ public class GraphDatabaseHolder implements Runnable {
 		if(mainNode == null)
 			System.exit(1);
 		StateFlowGraph.structuralIndexer = mainNode;
+		
+
+		
 //		StateFlowGraph.getSfgDb().getReferenceNode().createRelationshipTo(mainNode, RelTypes.REFRENCES);
 
 

@@ -57,12 +57,7 @@ public class StateFlowGraphCorrectNess {
 		// limit the crawling scope
 		builder.setMaximumStates(MAX_STATES);
 		builder.setMaximumDepth(MAX_CRAWL_DEPTH);
-		
-	
-		Plugin p =new TestSerializeStateVertex();
-		
-		builder.addPlugin(p);
-		
+				
 		Plugin p2 = new Post();
 		
 		builder.addPlugin(p2);
@@ -78,35 +73,6 @@ public class StateFlowGraphCorrectNess {
 
 	}
 	
-	private class TestSerializeStateVertex implements OnNewStatePlugin{
-
-		@Override
-		public void onNewState(CrawlSession session) {
-			// TODO Auto-generated method stub
-			
-			StateFlowGraph sfg = session.getStateFlowGraph();
-		
-			
-			Set<StateVertex> allStates =sfg.getAllStates();
-			for (StateVertex s : allStates){
-				
-				byte [] serializedSV = StateFlowGraph.serializeStateVertex(s);
-				
-				StateVertex after =  (StateVertex) StateFlowGraph.deserializeStateVertex(serializedSV);
-				
-				
-				assertTrue(after.toString(), s.equals(after));
-				assertTrue(after.toString(), s.getCandidateActions().size() == after.getCandidateActions().size());
-				assertTrue(after.toString(), s.getRegisterdCandidateActions().size() == after.getRegisterdCandidateActions().size());
-				assertTrue(after.toString(),s.getRegisteredCrawlers().size() == after.getRegisteredCrawlers().size());
-				
-				break;
-			}
-
-			
-		}
-		
-	}
 	
 	
 	private static InputSpecification getInputSpecification() {
@@ -118,63 +84,65 @@ public class StateFlowGraphCorrectNess {
 	}
 
 
-	/**
-	 * Test method for {@link com.crawljax.core.state.StateFlowGraph#deserializeStateVertex(byte[])}.
-	 */
-	@Test
-	public void testDeserializeStateVertex() {
-	}
-
-	/**
-	 * Test method for {@link com.crawljax.core.state.StateFlowGraph#serializeEventable(com.crawljax.core.state.Eventable)}.
-	 */
-	@Test
-	public void testSerializeEventableEventable() {
-	}
-
-	/**
-	 * Test method for {@link com.crawljax.core.state.StateFlowGraph#deserializeEventable(byte[])}.
-	 */
-	@Test
-	public void testDeserializeEventableByteArray() {
-	
-	}
-	
+		
 	private class Post implements PostCrawlingPlugin {
 
+		@SuppressWarnings("deprecation")
 		@Override
 		public void postCrawling(CrawlSession session) {
 			// TODO Auto-generated method stub
 			
-			com.crawljax.core.state.StateFlowGraph.setStatus(2);		
 			
-			String dbpath = StateFlowGraph.DB_PATH;
-			
-			session.getStateFlowGraph();
 			GraphDatabaseService sfgDB =	 StateFlowGraph.getSfgDb();
+
 			
-			sfgDB.shutdown();
-			
-			
-			try {
-				Thread.sleep(15000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+//			sfgDB.shutdown();
+//			
+//			
+//			try {
+//				Thread.sleep(15000);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}		
+//			
+//			String dbpath = StateFlowGraph.DB_PATH;
+//	
+//			sfgDB = new GraphDatabaseFactory().newEmbeddedDatabase( dbpath );
+//			
+//			
+//			
+
+			Node structuralIndexer = null;
+
+			boolean flag = false;
+			for (Node node: sfgDB.getAllNodes())
+			{
+				
+				String type = (String)node.getProperty("type", "noValue");
+				if (type.equals("indexing")){
+					flag = true;
+					structuralIndexer = node;
+
+					break;
+					
+				}
 			}
-			
-			sfgDB = new GraphDatabaseFactory().newEmbeddedDatabase( dbpath );
-			
-			
-			
-			
-			Node structuralIndexer = sfgDB.getReferenceNode().getSingleRelationship(RelTypes.REFRENCES,Direction.OUTGOING).getEndNode();
-			
-			String string = (String)structuralIndexer.getProperty("type",null);
-			
+			if (flag == true){
+				
+			}
+			else{
+				System.out.println("index not found");
+			}
+//			
+//			Node refNode = sfgDB.getReferenceNode();
+//			Relationship rel = refNode.getSingleRelationship(RelTypes.REFRENCES, Direction.OUTGOING);
+//			Node structuralIndexer = rel.getEndNode();
+//			
+		
 			Set<StateVertex> states = new HashSet<StateVertex>();
 			
-			for ( Relationship relationship : structuralIndexer.getRelationships(Direction.OUTGOING)){
+			for ( Relationship relationship : structuralIndexer.getRelationships(Direction.OUTGOING,RelTypes.INDEXES)){
 				
 
 				Node stateNode =relationship.getEndNode();
