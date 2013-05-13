@@ -104,9 +104,13 @@ public class StateFlowGraph implements Serializable {
 
 	// the key for storing the persisted Eventable objects
 	public static final String CLICKABLE_KEY = "clickable";
+	
+	// the key for storing the to string Eventable objects
+	public static final String CLICKABLE_TO_STRING_KEY = "clickableToString";
+
 
 	// the combined key for storing the persisted triples of
-	// (source StateVertex,Eventable,target StateVertex) saved in a string array
+	// (source StateVertex,Eventable to string ,target StateVertex) saved in a string array
 	// of length 3
 	// this is used for indexing edges
 	public static final String EDGE_COMBNINED_KEY = "edgeCombined";
@@ -442,8 +446,10 @@ public class StateFlowGraph implements Serializable {
 
 		String[] combinedEdgeKey = new String[3];
 		combinedEdgeKey[0] = sourceVert.getStrippedDom();
+		combinedEdgeKey[1] = eventable.toString();
+
 		combinedEdgeKey[2] = targetVert.getStrippedDom();
-		combinedEdgeKey[1] = UTF8.decode(serializedEventable);
+//		combinedEdgeKey[1] = UTF8.decode(serializedEventable);
 
 		synchronized(sfgDb){
 			Transaction tx = sfgDb.beginTx();
@@ -472,6 +478,10 @@ public class StateFlowGraph implements Serializable {
 					exists = false;
 
 					toBeAddedEdge.setProperty(CLICKABLE_KEY, serializedEventable);
+					
+					toBeAddedEdge.setProperty(CLICKABLE_TO_STRING_KEY,
+							UTF8.encode(eventable.toString()));
+								
 					toBeAddedEdge.setProperty(SOURCE_KEY,
 							UTF8.encode(sourceVert.getStrippedDom()));
 					toBeAddedEdge.setProperty(TARGET_KEY,
@@ -501,14 +511,14 @@ public class StateFlowGraph implements Serializable {
 
 			byte[] serSourceDom = (byte[]) edge.getProperty(SOURCE_KEY);
 			byte[] serTargetDom = (byte[]) edge.getProperty(TARGET_KEY);
-			byte[] serClickable = (byte[]) edge.getProperty(CLICKABLE_KEY);
+			byte[] serClickableToString = (byte[]) edge.getProperty(CLICKABLE_TO_STRING_KEY);
 
 			String sourceDom = UTF8.decode(serSourceDom);
 			String targetDom = UTF8.decode(serTargetDom);
-
+			String clickableToString = UTF8.decode(serClickableToString);
 			if (sourceDom.equals(combinedEdgeKey[0])
 					&& targetDom.equals(combinedEdgeKey[2])
-					&& UTF8.decode(serClickable).equals(combinedEdgeKey[1])) {
+					&& clickableToString.equals(combinedEdgeKey[1])) {
 				return edge;
 
 			}
