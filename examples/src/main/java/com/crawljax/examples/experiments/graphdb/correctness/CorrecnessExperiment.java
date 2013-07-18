@@ -33,17 +33,16 @@ public class CorrecnessExperiment {
 	public static void main(String[] args) {
 
 		// correcnessExperimentOn("http://www.ece.ubc.ca/~azarei");
-		correcnessExperimentOn("http://www.google.com");
-
+		// correcnessExperimentOn("http://www.google.com");
+		correcnessExperimentOn("file://localhost/Users/arz/localhost/applications/chess/index.html");
 		// correcnessExperimentOn("http://demo.crawljax.com");
 
 	}
 
 	private static void correcnessExperimentOn(String uRL) {
 
-		StateFlowGraph inMemorySfg = crawlInMemory(uRL);
-
 		StateFlowGraph inDatabaseSfg = crawlInDb(uRL);
+		StateFlowGraph inMemorySfg = crawlInMemory(uRL);
 
 		createExperimentReport(inMemorySfg, inDatabaseSfg, uRL);
 
@@ -186,7 +185,10 @@ public class CorrecnessExperiment {
 
 	private static String trimURL(String uRL) {
 
-		String trimmed = (String) uRL.subSequence(11, 20);
+		String trimmed = uRL;
+		if (uRL.length() > 21) {
+			trimmed = (String) uRL.subSequence(11, 20);
+		}
 		trimmed = trimmed.replace("http", "_");
 		trimmed = trimmed.replace("www", "_");
 
@@ -239,7 +241,7 @@ public class CorrecnessExperiment {
 		builder.crawlRules().click("div");
 		builder.crawlRules().click("span");
 
-		int maxStates = 10;
+		int maxStates = 50;
 		builder.setMaximumStates(maxStates);
 
 		return builder;

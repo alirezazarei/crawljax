@@ -1,6 +1,9 @@
 package com.crawljax.core.state;
 
+import java.util.List;
 import java.util.Set;
+
+import org.jgrapht.GraphPath;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -141,5 +144,7 @@ public interface StateFlowGraph {
 	 *         {@link StateVertex} via one of the sources outgoing edges.
 	 */
 	public ImmutableSet<StateVertex> getOutgoingStates(StateVertex stateVertix);
+
+	public List<List<GraphPath<StateVertex, Eventable>>> getAllPossiblePaths(StateVertex index);
 
 }

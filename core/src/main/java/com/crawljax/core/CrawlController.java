@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import com.crawljax.core.ExitNotifier.ExitStatus;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.plugin.Plugins;
+import com.crawljax.core.state.InDatabaseStateFlowGraph;
+import com.crawljax.core.state.StateFlowGraph.StateFlowGraphType;
 import com.crawljax.core.state.StateVertex;
 import com.crawljax.di.CrawlSessionProvider;
 
@@ -111,6 +113,11 @@ public class CrawlController implements Callable<CrawlSession> {
 			LOG.warn("The crawl was interrupted before it finished. Shutting down...");
 			exitReason = ExitStatus.ERROR;
 		} finally {
+			if (config.getGraphType() == StateFlowGraphType.SCALABLE) {
+				while (InDatabaseStateFlowGraph.getTerminationPermission() == false) {
+					LOG.info("waiting for the last edge to be inserted into the graph and then shutting down");
+				}
+			}
 			shutDown();
 			plugins.runPostCrawlingPlugins(crawlSessionProvider.get(), exitReason);
 			LOG.info("Shutdown process complete");

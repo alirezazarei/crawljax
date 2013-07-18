@@ -1,7 +1,8 @@
 package com.crawljax.examples;
 
-import java.util.concurrent.TimeUnit;
+import javax.swing.JOptionPane;
 
+import com.crawljax.core.CrawlSession;
 import com.crawljax.core.CrawljaxRunner;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.configuration.CrawljaxConfiguration.CrawljaxConfigurationBuilder;
@@ -18,13 +19,18 @@ public class ScalableExample {
 	 */
 	public static void main(String[] args) {
 		CrawljaxConfigurationBuilder builder =
-		        CrawljaxConfiguration.builderFor("http://demo.crawljax.com/");
+		        CrawljaxConfiguration
+		                .builderFor("file://localhost/Users/arz/localhost/applications/chess/index.html");
 		builder.setGraphType(StateFlowGraphType.SCALABLE);
 
 		builder.crawlRules().clickOnce(false);
-		builder.setMaximumRunTime(100, TimeUnit.MINUTES);
+		// builder.setMaximumRunTime(1, TimeUnit.MINUTES);
+		builder.setMaximumStates(10);
 		CrawljaxRunner crawljax =
 		        new CrawljaxRunner(builder.build());
-		crawljax.call();
+		CrawlSession session = crawljax.call();
+		int size = session.getStateFlowGraph().getAllStates().size();
+
+		JOptionPane.showMessageDialog(null, size);
 	}
 }

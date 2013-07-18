@@ -88,6 +88,16 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	private final ExitNotifier exitNotifier;
 
+	private static boolean terminationPermission = true;
+
+	public static void setTerminationPermission(boolean lastEdgeSet) {
+		terminationPermission = lastEdgeSet;
+	}
+
+	public static boolean getTerminationPermission() {
+		return terminationPermission;
+	}
+
 	/**
 	 * The directory path for saving the graph database created by neo4j for storing the state flow
 	 * graph
@@ -149,6 +159,25 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		this.sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(this.databasePath);
 		registerShutdownHook(this.sfgDb);
 
+	}
+
+	public void reloadGraphDB() {
+		this.sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(this.databasePath);
+		registerShutdownHook(this.sfgDb);
+
+		nodeIndex =
+		        sfgDb.index().forNodes(NODES_INDEX_NAME);
+
+		edgesIndex = sfgDb.index().forRelationships(EDGES_INDEX_NAME);
+
+		this.root = retrieveRoot();
+
+	}
+
+	private Node retrieveRoot() {
+
+		Node r = nodeIndex.get(NODE_TYPE, "indexing").getSingle();
+		return r;
 	}
 
 	/**
@@ -271,6 +300,19 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 			tx.finish();
 		}
 		if (alreadyEsixts == null) {
+
+			// if a state other than the index is added to the graph we should wait for the edge to
+			// be added to the graph before letting the executor send the termination interrupt.
+			// after that we could let the termination process go ahead.
+			if (state.getId() == StateVertex.INDEX_ID) {
+				setTerminationPermission(true);
+			} else {
+				setTerminationPermission(false);
+			}
+			int count = stateCounter.incrementAndGet();
+			exitNotifier.incrementNumberOfStates();
+			LOG.debug("Number of states is now {}", count);
+
 			return null;
 		} else {
 			return state;
@@ -373,9 +415,6 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 		// indexing the state by its id in addition to its stripped DOM
 		nodeIndex.add(toBeAddedNode, STATE_ID_IN_NODES, state.getId());
-		int count = stateCounter.incrementAndGet();
-		exitNotifier.incrementNumberOfStates();
-		LOG.debug("Number of states is now {}", count);
 
 		// serializing the state
 		byte[] serializedSV = serializeStateVertex(state);
@@ -451,6 +490,20 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		} finally {
 			tx.finish();
 		}
+
+		// if a state other than the index is added to the graph we should wait for the edge to
+		// be added to the graph before letting the executor send the termination interrupt.
+		// after that we could let the termination process go ahead.
+
+		setTerminationPermission(true);
+
+		// making sure the interrupt flag of the current thread which is set to true by shutdown is
+		// still true please not that this flag is easily reset to false when it is read!! That's
+		// why you have to make sure it is still set to true!
+
+		// if (exitNotifier.isExitCalled()) {
+		// Thread.currentThread().interrupt();
+		// }
 		return (alreadyExists == null);
 	}
 
@@ -686,8 +739,8 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	@Override
 	public ImmutableList<Eventable> getShortestPath(StateVertex start,
 	        StateVertex end) {
-		Node startNode = getNodeFromDB(start.getStrippedDom());
-		Node endNode = getNodeFromDB(end.getStrippedDom());
+		Node startNode = getNodeFromDB(UTF8.decode(UTF8.encode(start.getStrippedDom())));
+		Node endNode = getNodeFromDB(UTF8.decode(UTF8.encode(end.getStrippedDom())));
 
 		PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal
 		        .pathExpanderForTypes(RelTypes.TRANSITIONS_TO,
@@ -779,21 +832,25 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	public ImmutableSet<StateVertex> getAllStates() {
 
 		ImmutableSet.Builder<StateVertex> allStates = new ImmutableSet.Builder<StateVertex>();
+		Transaction tx = sfgDb.beginTx();
+		try {
+			for (Relationship relationship : root.getRelationships(
+			        Direction.OUTGOING, RelTypes.INDEXES)) {
 
-		for (Relationship relationship : root.getRelationships(
-		        Direction.OUTGOING, RelTypes.INDEXES)) {
+				Node node = relationship.getEndNode();
 
-			Node node = relationship.getEndNode();
+				byte[] serializedNode = (byte[]) node.getProperty(
+				        SERIALIZED_STATE_VERTEX_IN_NODES, null);
 
-			byte[] serializedNode = (byte[]) node.getProperty(
-			        SERIALIZED_STATE_VERTEX_IN_NODES, null);
-
-			if (serializedNode != null) {
-				StateVertex state = deserializeStateVertex(serializedNode);
-				allStates.add(state);
+				if (serializedNode != null) {
+					StateVertex state = deserializeStateVertex(serializedNode);
+					allStates.add(state);
+				}
 			}
+			tx.success();
+		} finally {
+			tx.finish();
 		}
-
 		return allStates.build();
 	}
 
@@ -969,6 +1026,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 * @return a list of GraphPath lists.
 	 */
 
+	@Override
 	public List<List<GraphPath<StateVertex, Eventable>>> getAllPossiblePaths(
 	        StateVertex index) {
 		final List<List<GraphPath<StateVertex, Eventable>>> results = Lists.newArrayList();
@@ -1007,24 +1065,38 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	private Relationship edgePutIfAbsent(Relationship toBeAddedEdge,
 	        String edgeConcatenatedKey) {
-
-		Relationship alreadyExists = edgesIndex.putIfAbsent(toBeAddedEdge,
+		Relationship alreadyExists = null;
+		alreadyExists = edgesIndex.putIfAbsent(toBeAddedEdge,
 		        SOURCE_CLICKABLE_TARGET_IN_EDGES_FOR_UNIQUE_INDEXING, edgeConcatenatedKey);
 		return alreadyExists;
 
 	}
 
+	// private Node getNodeFromDB(String strippedDom) {
+	//
+	// Node node =
+	// nodeIndex.get(STRIPPED_DOM_IN_NODES, UTF8.decode(UTF8.encode(strippedDom)))
+	// .getSingle();
+	// return node;
+	//
+	// }
+
 	private Node getNodeFromDB(String strippedDom) {
-
-		Node node = nodeIndex.get(STRIPPED_DOM_IN_NODES, strippedDom).getSingle();
-		return node;
-
+		for (Relationship edge : root.getRelationships(RelTypes.INDEXES, Direction.OUTGOING)) {
+			Node node = edge.getEndNode();
+			String strippedDomProperty = (String) node.getProperty(STRIPPED_DOM_IN_NODES);
+			if (strippedDom.equals(strippedDomProperty)) {
+				return node;
+			}
+		}
+		return null;
 	}
 
 	private Node putIfAbsentNode(Node toBeAddedNode, String strippedDom) {
 
 		Node alreadyPresent =
-		        nodeIndex.putIfAbsent(toBeAddedNode, STRIPPED_DOM_IN_NODES, strippedDom);
+		        nodeIndex.putIfAbsent(toBeAddedNode, STRIPPED_DOM_IN_NODES,
+		                UTF8.decode(UTF8.encode(strippedDom)));
 		if (alreadyPresent != null) {
 			return alreadyPresent;
 		}

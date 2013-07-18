@@ -7,7 +7,6 @@ import javax.annotation.concurrent.ThreadSafe;
 import javax.inject.Singleton;
 
 import com.crawljax.core.configuration.CrawljaxConfiguration;
-import com.google.common.annotations.VisibleForTesting;
 
 @Singleton
 @ThreadSafe
@@ -112,8 +111,7 @@ public class ExitNotifier {
 		latch.countDown();
 	}
 
-	@VisibleForTesting
-	boolean isExitCalled() {
+	public boolean isExitCalled() {
 		return latch.getCount() == 0;
 	}
 }
