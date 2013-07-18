@@ -497,13 +497,6 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 		setTerminationPermission(true);
 
-		// making sure the interrupt flag of the current thread which is set to true by shutdown is
-		// still true please not that this flag is easily reset to false when it is read!! That's
-		// why you have to make sure it is still set to true!
-
-		// if (exitNotifier.isExitCalled()) {
-		// Thread.currentThread().interrupt();
-		// }
 		return (alreadyExists == null);
 	}
 
