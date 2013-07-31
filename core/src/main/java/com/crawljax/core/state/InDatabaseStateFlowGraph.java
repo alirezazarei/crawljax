@@ -180,6 +180,28 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		return r;
 	}
 
+	public static boolean saveSfgInDatabase(StateFlowGraph sfg, InDatabaseStateFlowGraph dbSfg) {
+
+		for (StateVertex state : sfg.getAllStates()) {
+			if (dbSfg.putIfAbsent(state) != null) {
+				LOG.warn("duplicate state found in the original state flow graph! {}",
+				        state.getName());
+				return false;
+			}
+		}
+		for (Eventable edge : sfg.getAllEdges()) {
+			StateVertex sourceVert = edge.getSourceStateVertex();
+			StateVertex targetVert = edge.getTargetStateVertex();
+			if (dbSfg.addEdge(sourceVert, targetVert, edge) == false) {
+				LOG.warn("duplicate edge found in the original state flow graph! {}",
+				        edge.toString());
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	/**
 	 * creating the graph database In this method time microseconds are used to ensure that every
 	 * time we run the program a clean empty database is used for storing the data
@@ -282,8 +304,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 			// adding the container for the state which is going to be added to the graph database
 			toBeAddedNode = sfgDb.createNode();
 			alreadyEsixts =
-			        putIfAbsentNode(toBeAddedNode,
-			                UTF8.decode(UTF8.encode(state.getStrippedDom())));
+			        putIfAbsentNode(toBeAddedNode, state);
 			if (alreadyEsixts != null) {
 				// the state has already been indexed
 				LOG.debug("putIfAbsent: Graph already contained vertex {}",
@@ -315,8 +336,26 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 			return null;
 		} else {
-			return state;
+			StateVertex clone = nodeToState(alreadyEsixts);
+			return clone;
 		}
+	}
+
+	private int stateToIndex(StateVertex state) {
+
+		return state.hashCode();
+		// MessageDigest md = null;
+		// byte[] bytesOfMessage = null;
+		// try {
+		// bytesOfMessage = state.getStrippedDom().getBytes("UTF-8");
+		//
+		// md = MessageDigest.getInstance("MD5");
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+		// byte[] thedigest = md.digest(bytesOfMessage);
+		//
+		// return thedigest;
 	}
 
 	/**
@@ -474,7 +513,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 		Relationship toBeAddedEdge = null;
 		Relationship alreadyExists = null;
-		String edgeConcatenatedKey = buildEdgeKey(sourceVert, eventable, targetVert);
+		int edgeConcatenatedKey = buildEdgeKey(sourceVert, eventable, targetVert);
 
 		Transaction tx = sfgDb.beginTx();
 		try {
@@ -529,10 +568,8 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 */
 
 	private Relationship addEdgeBetweenStates(StateVertex sourceVert, StateVertex targetVert) {
-		Node sourceNode = getNodeFromDB(UTF8.decode(UTF8
-		        .encode(sourceVert.getStrippedDom())));
-		Node targetNode = getNodeFromDB(UTF8.decode(UTF8
-		        .encode(targetVert.getStrippedDom())));
+		Node sourceNode = getNodeFromDB(sourceVert);
+		Node targetNode = getNodeFromDB(targetVert);
 		Relationship toBeAddedEdge = sourceNode.createRelationshipTo(targetNode,
 		        RelTypes.TRANSITIONS_TO);
 
@@ -548,7 +585,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 * @param targetVert
 	 * @return the key used for indexing eventables in the graph database
 	 */
-	private String buildEdgeKey(StateVertex sourceVert, Eventable eventable,
+	private int buildEdgeKey(StateVertex sourceVert, Eventable eventable,
 	        StateVertex targetVert) {
 		// array indexes for the triple key used in edge indexing
 		final int SOURCE_VERTEX_INDEX = 0;
@@ -566,7 +603,13 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		String edgeConcatenatedKey =
 		        edgeTriadKey[SOURCE_VERTEX_INDEX] + edgeTriadKey[CLICKABLE_INDEX]
 		                + edgeTriadKey[TARGET_VERTEX_INDEX];
-		return edgeConcatenatedKey;
+		// return edgeConcatenatedKey;
+
+		int hash =
+		        sourceVert.hashCode() + targetVert.hashCode() + eventable.toString().hashCode();
+
+		return hash;
+
 	}
 
 	/**
@@ -606,8 +649,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	public ImmutableSet<Eventable> getOutgoingClickables(StateVertex stateVertix) {
 
 		ImmutableSet.Builder<Eventable> outgoing = new ImmutableSet.Builder<Eventable>();
-		Node node = getNodeFromDB(UTF8.decode(UTF8.encode(stateVertix
-		        .getStrippedDom())));
+		Node node = getNodeFromDB(stateVertix);
 		for (Relationship edge : node.getRelationships(
 		        RelTypes.TRANSITIONS_TO, Direction.OUTGOING)) {
 			Eventable eventable = edgeToEventable(edge);
@@ -634,8 +676,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	@Override
 	public ImmutableSet<Eventable> getIncomingClickables(StateVertex stateVertix) {
 		ImmutableSet.Builder<Eventable> incoming = new ImmutableSet.Builder<Eventable>();
-		Node node = getNodeFromDB(UTF8.decode(UTF8.encode(stateVertix
-		        .getStrippedDom())));
+		Node node = getNodeFromDB(stateVertix);
 		for (Relationship edge : node.getRelationships(
 		        RelTypes.TRANSITIONS_TO, Direction.INCOMING)) {
 			Eventable eventable = edgeToEventable(edge);
@@ -662,8 +703,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	public ImmutableSet<StateVertex> getOutgoingStates(StateVertex stateVertix) {
 
 		ImmutableSet.Builder<StateVertex> outgoing = new ImmutableSet.Builder<>();
-		Node sourceNode = getNodeFromDB(UTF8.decode(UTF8.encode(stateVertix
-		        .getStrippedDom())));
+		Node sourceNode = getNodeFromDB(stateVertix);
 		for (Relationship edge : sourceNode.getRelationships(
 		        RelTypes.TRANSITIONS_TO, Direction.OUTGOING)) {
 			Node endNode = edge.getEndNode();
@@ -706,8 +746,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 */
 
 	private boolean canGoToDirectional(StateVertex source, StateVertex target) {
-		Node sourceNode = getNodeFromDB(UTF8.decode(UTF8.encode(source
-		        .getStrippedDom())));
+		Node sourceNode = getNodeFromDB(source);
 		for (Relationship edge : sourceNode.getRelationships(
 		        RelTypes.TRANSITIONS_TO, Direction.OUTGOING)) {
 			Node targetNode = edge.getEndNode();
@@ -732,8 +771,8 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	@Override
 	public ImmutableList<Eventable> getShortestPath(StateVertex start,
 	        StateVertex end) {
-		Node startNode = getNodeFromDB(UTF8.decode(UTF8.encode(start.getStrippedDom())));
-		Node endNode = getNodeFromDB(UTF8.decode(UTF8.encode(end.getStrippedDom())));
+		Node startNode = getNodeFromDB(start);
+		Node endNode = getNodeFromDB(end);
 
 		PathFinder<Path> finder = GraphAlgoFactory.shortestPath(Traversal
 		        .pathExpanderForTypes(RelTypes.TRANSITIONS_TO,
@@ -824,6 +863,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	@Override
 	public ImmutableSet<StateVertex> getAllStates() {
 
+		Set<StateVertex> allStates_ = new HashSet<StateVertex>();
 		ImmutableSet.Builder<StateVertex> allStates = new ImmutableSet.Builder<StateVertex>();
 		Transaction tx = sfgDb.beginTx();
 		try {
@@ -837,14 +877,28 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 				if (serializedNode != null) {
 					StateVertex state = deserializeStateVertex(serializedNode);
+					if (allStates_.contains(state)) {
+						for (StateVertex s : allStates_) {
+							if (s.equals(state)) {
+								System.out.println(state.getId());
+
+							}
+						}
+
+					}
+
 					allStates.add(state);
+					allStates_.add(state);
+
 				}
 			}
 			tx.success();
 		} finally {
 			tx.finish();
 		}
-		return allStates.build();
+		ImmutableSet<StateVertex> resutl = allStates.build();
+		ImmutableSet<StateVertex> resutl_ = ImmutableSet.copyOf(allStates_);
+		return resutl;
 	}
 
 	/**
@@ -892,9 +946,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 */
 	private StateVertex getStateInGraph(StateVertex state) {
 
-		String strippedDom = state.getStrippedDom();
-		Node node = getNodeFromDB(strippedDom);
-
+		Node node = getNodeFromDB(state);
 		StateVertex stateFromGraph = nodeToState(node);
 		return stateFromGraph;
 	}
@@ -1057,7 +1109,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	}
 
 	private Relationship edgePutIfAbsent(Relationship toBeAddedEdge,
-	        String edgeConcatenatedKey) {
+	        int edgeConcatenatedKey) {
 		Relationship alreadyExists = null;
 		alreadyExists = edgesIndex.putIfAbsent(toBeAddedEdge,
 		        SOURCE_CLICKABLE_TARGET_IN_EDGES_FOR_UNIQUE_INDEXING, edgeConcatenatedKey);
@@ -1065,16 +1117,17 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	}
 
-	// private Node getNodeFromDB(String strippedDom) {
+	// private Node getNodeFromDB(StateVertex state) {
 	//
 	// Node node =
-	// nodeIndex.get(STRIPPED_DOM_IN_NODES, UTF8.decode(UTF8.encode(strippedDom)))
+	// nodeIndex.get(STRIPPED_DOM_IN_NODES, stateToIndex(state))
 	// .getSingle();
 	// return node;
 	//
 	// }
-
-	private Node getNodeFromDB(String strippedDom) {
+	//
+	private Node getNodeFromDB(StateVertex state) {
+		String strippedDom = state.getStrippedDom();
 		for (Relationship edge : root.getRelationships(RelTypes.INDEXES, Direction.OUTGOING)) {
 			Node node = edge.getEndNode();
 			String strippedDomProperty = (String) node.getProperty(STRIPPED_DOM_IN_NODES);
@@ -1085,11 +1138,10 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		return null;
 	}
 
-	private Node putIfAbsentNode(Node toBeAddedNode, String strippedDom) {
+	private Node putIfAbsentNode(Node toBeAddedNode, StateVertex state) {
 
 		Node alreadyPresent =
-		        nodeIndex.putIfAbsent(toBeAddedNode, STRIPPED_DOM_IN_NODES,
-		                UTF8.decode(UTF8.encode(strippedDom)));
+		        nodeIndex.putIfAbsent(toBeAddedNode, STRIPPED_DOM_IN_NODES, stateToIndex(state));
 		if (alreadyPresent != null) {
 			return alreadyPresent;
 		}

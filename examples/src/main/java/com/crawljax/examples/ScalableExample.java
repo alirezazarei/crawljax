@@ -20,12 +20,12 @@ public class ScalableExample {
 	public static void main(String[] args) {
 		CrawljaxConfigurationBuilder builder =
 		        CrawljaxConfiguration
-		                .builderFor("file://localhost/Users/arz/localhost/applications/chess/index.html");
+		                .builderFor("http://localhost/applications/ajaxfilemanagerv_tinymce1.1/tinymce_test.php");
 		builder.setGraphType(StateFlowGraphType.SCALABLE);
 
 		builder.crawlRules().clickOnce(false);
 		// builder.setMaximumRunTime(1, TimeUnit.MINUTES);
-		builder.setMaximumStates(10);
+		builder.setMaximumStates(50);
 		CrawljaxRunner crawljax =
 		        new CrawljaxRunner(builder.build());
 		CrawlSession session = crawljax.call();

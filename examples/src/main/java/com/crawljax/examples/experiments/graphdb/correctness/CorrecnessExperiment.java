@@ -15,17 +15,31 @@ import java.util.Date;
 
 import com.crawljax.core.CrawljaxException;
 import com.crawljax.core.CrawljaxRunner;
+import com.crawljax.core.ExitNotifier;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.configuration.CrawljaxConfiguration.CrawljaxConfigurationBuilder;
 import com.crawljax.core.state.Eventable;
+import com.crawljax.core.state.InDatabaseStateFlowGraph;
 import com.crawljax.core.state.StateFlowGraph;
 import com.crawljax.core.state.StateFlowGraph.StateFlowGraphType;
 import com.crawljax.core.state.StateVertex;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * @author arz
  */
 public class CorrecnessExperiment {
+
+	private static int MAX_STATES = 50;
+	private static int MAX_DEPTH = 5;
+
+	public static void setMAX_DEPTH(int mAX_DEPTH) {
+		MAX_DEPTH = mAX_DEPTH;
+	}
+
+	public static void setMaxState(int max) {
+		MAX_STATES = max;
+	}
 
 	/**
 	 * @param args
@@ -33,16 +47,28 @@ public class CorrecnessExperiment {
 	public static void main(String[] args) {
 
 		// correcnessExperimentOn("http://www.ece.ubc.ca/~azarei");
-		// correcnessExperimentOn("http://www.google.com");
-		correcnessExperimentOn("file://localhost/Users/arz/localhost/applications/chess/index.html");
+		// correctnessExperimentOn("http://www.google.com");
+		// correcnessExperimentOn("file://localhost/Users/arz/localhost/applications/chess/index.html");
 		// correcnessExperimentOn("http://demo.crawljax.com");
+		// correctnessExperimentOn("http://localhost/applications/phormer331/");
+		correctnessExperimentOn("http://localhost/applications/ajaxfilemanagerv_tinymce1.1/tinymce_test.php");
+		// correctnessExperimentOn("http://localhost/correcNess/pluginTestFirst.htm");
+		// correctnessExperimentOn("http://localhost/correctness/c4.htm");
 
+		// correctnessExperimentOn("http://demo.crawljax.com");
 	}
 
-	private static void correcnessExperimentOn(String uRL) {
+	private static void correctnessExperimentOn(String uRL) {
+
+		StateFlowGraph inMemorySfg = crawlInMemory(uRL);
+		InDatabaseStateFlowGraph inDbSfg = new InDatabaseStateFlowGraph(new ExitNotifier(0));
+		InDatabaseStateFlowGraph.saveSfgInDatabase(inMemorySfg, inDbSfg);
+
+		// StateFlowGraph inMemorySfg2 = crawlInMemory(uRL);
+		// InDatabaseStateFlowGraph inDbSfg2 = new InDatabaseStateFlowGraph(new ExitNotifier(0));
+		// InDatabaseStateFlowGraph.saveSfgInDatabase(inMemorySfg2, inDbSfg2);
 
 		StateFlowGraph inDatabaseSfg = crawlInDb(uRL);
-		StateFlowGraph inMemorySfg = crawlInMemory(uRL);
 
 		createExperimentReport(inMemorySfg, inDatabaseSfg, uRL);
 
@@ -56,7 +82,7 @@ public class CorrecnessExperiment {
 		return inDatabaseSfg;
 	}
 
-	private static StateFlowGraph crawlInMemory(String uRL) {
+	static StateFlowGraph crawlInMemory(String uRL) {
 		CrawljaxConfiguration inMemoryConfiguration = buildInMemoryConfiguration(uRL);
 		CrawljaxRunner inMemoryCrawljax = new CrawljaxRunner(inMemoryConfiguration);
 		StateFlowGraph inMemorySfg = inMemoryCrawljax.call().getStateFlowGraph();
@@ -103,18 +129,29 @@ public class CorrecnessExperiment {
 
 		report.append("Number os states in memory based crawling: "
 		        + inMemorySfg.getAllStates().size() + "\n");
-		report.append("Number os states in Database based crawling: "
-		        + inDatabaseSfg.getAllStates().size() + "\n\n\n");
 
+		ImmutableSet<StateVertex> allStatesFromDb = inDatabaseSfg.getAllStates();
+		int allStatesFromDbSize = allStatesFromDb.size();
+		report.append("Number os states in Database based crawling: "
+		        + allStatesFromDbSize + "\n\n\n");
+
+		String statesComparisonResult = compareStates(inMemorySfg, inDatabaseSfg);
 		report.append("Are the states identical in both graphs? "
-		        + compareStates(inMemorySfg, inDatabaseSfg) + "\n\n");
-		report.append("Are all the eges and their start and end states identical: "
-		        + compareEdges(inMemorySfg, inDatabaseSfg) + "\n");
+		        + statesComparisonResult + "\n\n");
+		if (statesComparisonResult.equals(new String("Yes, of course!"))) {
+			try {
+				report.append("Are all the eges and their start and end states identical: "
+				        + compareEdges(inMemorySfg, inDatabaseSfg) + "\n");
+			} catch (Exception e) {
+
+				report.append(e.getMessage());
+			}
+		}
 
 		return report.toString();
 	}
 
-	private static String compareEdges(StateFlowGraph inMemorySfg, StateFlowGraph inDatabaseSfg) {
+	public static String compareEdges(StateFlowGraph inMemorySfg, StateFlowGraph inDatabaseSfg) {
 
 		for (StateVertex inDbState : inDatabaseSfg.getAllStates()) {
 			for (Eventable inDbEdge : inDatabaseSfg.getOutgoingClickables(inDbState)) {
@@ -125,29 +162,52 @@ public class CorrecnessExperiment {
 					                inMemEdge.getSourceStateVertex())) {
 						edgeFound++;
 					}
-					if (edgeFound != 1) {
-						return new String("edge: " + inDbEdge.toString()
-						        + " was found" + edgeFound
-						        + " times. This edge must have been between state: "
-						        + inDbEdge.getSourceStateVertex().getId() + " and state: "
-						        + inDbEdge.getTargetStateVertex().getId());
-					}
-
 				}
-
+				if (edgeFound == 0) {
+					return new String("An edge "
+					        + " was found" + edgeFound
+					        + " times. This edge must have been between state: "
+					        + inDbEdge.getSourceStateVertex().getId() + " and state: "
+					        + inDbEdge.getTargetStateVertex().getId()) + ". The edge:"
+					        + inDbEdge.toString();
+				}
 			}
 		}
 		return new String("Yes, of course!");
 	}
 
-	private static String compareStates(StateFlowGraph inMemorySfg, StateFlowGraph inDatabaseSfg) {
+	public static String compareStates(StateFlowGraph inMemorySfg, StateFlowGraph inDatabaseSfg) {
 
-		if (inDatabaseSfg.getAllStates().containsAll(inMemorySfg.getAllStates())) {
-			return new String("Yes, of course!");
-		} else {
-			return new String("No");
+		boolean flag = true;
+		for (StateVertex inMemState : inMemorySfg.getAllStates()) {
+			flag = false;
+			String firstStrippedDom = inMemState.getStrippedDom();
+			for (StateVertex inDbState : inDatabaseSfg.getAllStates()) {
+				String secondStrippedDom = inDbState.getStrippedDom();
 
+				if (firstStrippedDom.equals(secondStrippedDom)) {
+
+					flag = true;
+					break;
+				} else {
+					// for (int i = 0; i < firstStrippedDom.length(); i++) {
+					// if (firstStrippedDom.charAt(i) != secondStrippedDom.charAt(i)) {
+					// if (i > 10) {
+					// // JOptionPane.showMessageDialog(null,
+					// // firstStrippedDom.subSequence(i - 10, i));
+					// }
+					// break;
+					// }
+					// }
+				}
+
+			}
+			if (flag == false) {
+				return new String("No, this state was not found " + inMemState.getName());
+			}
 		}
+
+		return new String("Yes, of course!");
 
 	}
 
@@ -241,9 +301,15 @@ public class CorrecnessExperiment {
 		builder.crawlRules().click("div");
 		builder.crawlRules().click("span");
 
-		int maxStates = 50;
+		builder.crawlRules().insertRandomDataInInputForms(false);
+		builder.crawlRules().clickOnce(false);
+
+		int maxStates = MAX_STATES;
+		int maxDepth = MAX_DEPTH;
 		builder.setMaximumStates(maxStates);
+		builder.setMaximumDepth(maxDepth);
 
 		return builder;
 	}
+
 }
