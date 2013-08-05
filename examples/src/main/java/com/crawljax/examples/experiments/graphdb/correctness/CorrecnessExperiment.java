@@ -33,7 +33,8 @@ public class CorrecnessExperiment {
 	private static int MAX_STATES = 50;
 	private static int MAX_DEPTH = 5;
 	
-	private static String folder = "/ubc/ece/home/am/grads/azarei/work/Desktop/graph-db-experiemtns/correctness";
+	private static String folder = "/Users/arz/Desktop/graph-db-experiemtns/correctness";
+    
 	public static void setFolder(String folder) {
 		CorrecnessExperiment.folder = folder;
 	}
