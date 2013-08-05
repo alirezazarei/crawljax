@@ -32,6 +32,14 @@ public class CorrecnessExperiment {
 
 	private static int MAX_STATES = 50;
 	private static int MAX_DEPTH = 5;
+	
+	private static String folder = "/ubc/ece/home/am/grads/azarei/work/Desktop/graph-db-experiemtns/correctness";
+	public static void setFolder(String folder) {
+		CorrecnessExperiment.folder = folder;
+	}
+	public static String getFolder() {
+		return folder;
+	}
 
 	public static void setMAX_DEPTH(int mAX_DEPTH) {
 		MAX_DEPTH = mAX_DEPTH;
@@ -90,6 +98,11 @@ public class CorrecnessExperiment {
 	}
 
 	public static void createExperimentReport(StateFlowGraph inMemorySfg,
+	        StateFlowGraph inDatabaseSfg, String uRL, String fold) {
+		setFolder(fold);
+		createExperimentReport(inMemorySfg, inDatabaseSfg, uRL);
+	}
+	public static void createExperimentReport(StateFlowGraph inMemorySfg,
 	        StateFlowGraph inDatabaseSfg, String uRL) {
 		String report = composeReport(inMemorySfg, inDatabaseSfg);
 		BufferedWriter writer = getTheWriter(uRL);
@@ -103,8 +116,7 @@ public class CorrecnessExperiment {
 
 	public static BufferedWriter getTheWriter(String uRL) {
 
-		return getWriter(createFile(createFolder(new String(
-		        "/Users/arz/Desktop/graph-db-experiemtns/correctness")), uRL));
+		return getWriter(createFile(createFolder(folder), uRL));
 
 	}
 

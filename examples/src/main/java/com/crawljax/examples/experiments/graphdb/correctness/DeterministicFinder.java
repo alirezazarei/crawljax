@@ -17,15 +17,15 @@ public class DeterministicFinder {
 
 		List<String> urls = new ArrayList<String>();
 
-		urls.add("http://metrics.codahale.com/");
-		urls.add("http://www.facebook.com");
-		urls.add("http://www.ece.ubc.ca/");
-		urls.add("http://www.ubc.ca/");
-		urls.add("https://www.google.ca/");
-		urls.add("http://www.bing.com/");
-		urls.add("https://mail.google.com/");
-		urls.add("https://github.com/");
-		urls.add("https://code.google.com/p/guava-libraries/");
+//		urls.add("http://metrics.codahale.com/");
+//		urls.add("http://www.facebook.com");
+//		urls.add("http://www.ece.ubc.ca/");
+//		urls.add("http://www.ubc.ca/");
+//		urls.add("https://www.google.ca/");
+//		urls.add("http://www.bing.com/");
+//		urls.add("https://mail.google.com/");
+//		urls.add("https://github.com/");
+//		urls.add("https://code.google.com/p/guava-libraries/");
 		urls.add("http://www.vogella.com/");
 
 		for (String uRL : urls) {
