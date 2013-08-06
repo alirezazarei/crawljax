@@ -32,12 +32,13 @@ public class CorrecnessExperiment {
 
 	private static int MAX_STATES = 50;
 	private static int MAX_DEPTH = 5;
-	
+
 	private static String folder = "/Users/arz/Desktop/graph-db-experiemtns/correctness";
-    
+
 	public static void setFolder(String folder) {
 		CorrecnessExperiment.folder = folder;
 	}
+
 	public static String getFolder() {
 		return folder;
 	}
@@ -83,7 +84,7 @@ public class CorrecnessExperiment {
 
 	}
 
-	private static StateFlowGraph crawlInDb(String uRl) {
+	public static StateFlowGraph crawlInDb(String uRl) {
 
 		CrawljaxConfiguration inDatabaseConfiguration = buildInDatabaseConfiguration(uRl);
 		CrawljaxRunner inDatabaseCrawljax = new CrawljaxRunner(inDatabaseConfiguration);
@@ -91,7 +92,7 @@ public class CorrecnessExperiment {
 		return inDatabaseSfg;
 	}
 
-	static StateFlowGraph crawlInMemory(String uRL) {
+	public static StateFlowGraph crawlInMemory(String uRL) {
 		CrawljaxConfiguration inMemoryConfiguration = buildInMemoryConfiguration(uRL);
 		CrawljaxRunner inMemoryCrawljax = new CrawljaxRunner(inMemoryConfiguration);
 		StateFlowGraph inMemorySfg = inMemoryCrawljax.call().getStateFlowGraph();
@@ -103,6 +104,7 @@ public class CorrecnessExperiment {
 		setFolder(fold);
 		createExperimentReport(inMemorySfg, inDatabaseSfg, uRL);
 	}
+
 	public static void createExperimentReport(StateFlowGraph inMemorySfg,
 	        StateFlowGraph inDatabaseSfg, String uRL) {
 		String report = composeReport(inMemorySfg, inDatabaseSfg);
