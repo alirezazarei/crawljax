@@ -22,6 +22,8 @@ public final class InDatabaseStateFlowGraphConstants {
 	// as a string in a node
 	public static final String STRIPPED_DOM_IN_NODES = "Stripped Dom";
 
+	public static final String NODES_INDEX_IN_THE_NODE_INDEX = "nodes' index in the node index";
+
 	// the key for storing the source key in an edge
 	public static final String SOURCE_STRIPPED_DOM_IN_EDGES = "Source Stripped Dom";
 
@@ -58,5 +60,9 @@ public final class InDatabaseStateFlowGraphConstants {
 
 	// the id used for the for edge indexer object
 	public static final String EDGES_INDEX_NAME = "edgesIndex";
+
+	public enum ExitPermission {
+		EXIT_ALLOWED, EXIT_NOT_ALLOWED, ABOUT_TO_EXIT
+	}
 
 }

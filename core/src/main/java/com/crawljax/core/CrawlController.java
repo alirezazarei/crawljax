@@ -15,6 +15,7 @@ import com.crawljax.core.ExitNotifier.ExitStatus;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.plugin.Plugins;
 import com.crawljax.core.state.InDatabaseStateFlowGraph;
+import com.crawljax.core.state.InDatabaseStateFlowGraphConstants.ExitPermission;
 import com.crawljax.core.state.StateFlowGraph.StateFlowGraphType;
 import com.crawljax.core.state.StateVertex;
 import com.crawljax.di.CrawlSessionProvider;
@@ -114,9 +115,10 @@ public class CrawlController implements Callable<CrawlSession> {
 			exitReason = ExitStatus.ERROR;
 		} finally {
 			if (config.getGraphType() == StateFlowGraphType.SCALABLE) {
-				while (InDatabaseStateFlowGraph.getTerminationPermission() == false) {
+				while (InDatabaseStateFlowGraph.getTerminationPermission() == ExitPermission.EXIT_NOT_ALLOWED) {
 					LOG.info("waiting for the last edge to be inserted into the graph and then shutting down");
 				}
+				InDatabaseStateFlowGraph.setTerminationPermission(ExitPermission.ABOUT_TO_EXIT);
 			}
 			shutDown();
 			plugins.runPostCrawlingPlugins(crawlSessionProvider.get(), exitReason);

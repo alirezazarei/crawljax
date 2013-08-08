@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import com.crawljax.core.CrawljaxException;
 import com.crawljax.core.CrawljaxRunner;
@@ -30,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
  */
 public class CorrecnessExperiment {
 
+	private static final int MAX_TIME = 8 * 60;
 	private static int MAX_STATES = 50;
 	private static int MAX_DEPTH = 5;
 
@@ -55,17 +57,19 @@ public class CorrecnessExperiment {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-
+		String url = "http://localhost/correctness/c4__CorrectnessObject.htm";
 		// correcnessExperimentOn("http://www.ece.ubc.ca/~azarei");
 		// correctnessExperimentOn("http://www.google.com");
 		// correcnessExperimentOn("file://localhost/Users/arz/localhost/applications/chess/index.html");
 		// correcnessExperimentOn("http://demo.crawljax.com");
 		// correctnessExperimentOn("http://localhost/applications/phormer331/");
-		correctnessExperimentOn("http://localhost/applications/ajaxfilemanagerv_tinymce1.1/tinymce_test.php");
+		// correctnessExperimentOn("http://localhost/applications/ajaxfilemanagerv_tinymce1.1/tinymce_test.php");
 		// correctnessExperimentOn("http://localhost/correcNess/pluginTestFirst.htm");
 		// correctnessExperimentOn("http://localhost/correctness/c4.htm");
 
 		// correctnessExperimentOn("http://demo.crawljax.com");
+
+		correctnessExperimentOn(url);
 	}
 
 	private static void correctnessExperimentOn(String uRL) {
@@ -321,8 +325,10 @@ public class CorrecnessExperiment {
 
 		int maxStates = MAX_STATES;
 		int maxDepth = MAX_DEPTH;
+		int MaxTime = MAX_TIME;
 		builder.setMaximumStates(maxStates);
 		builder.setMaximumDepth(maxDepth);
+		builder.setMaximumRunTime(MaxTime, TimeUnit.MINUTES);
 
 		return builder;
 	}
