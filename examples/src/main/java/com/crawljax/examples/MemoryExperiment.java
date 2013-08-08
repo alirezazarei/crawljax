@@ -26,9 +26,9 @@ public class MemoryExperiment {
 		CorrecnessExperiment.setMaxState(MAX_STATES);
 		CorrecnessExperiment.setMAX_DEPTH(MAX_DEPTH);
 
-		// CorrecnessExperiment.crawlInMemory(URL);
+		CorrecnessExperiment.crawlInMemory(URL);
 
-		CorrecnessExperiment.crawlInDb(URL);
+		// CorrecnessExperiment.crawlInDb(URL);
 
 	}
 
