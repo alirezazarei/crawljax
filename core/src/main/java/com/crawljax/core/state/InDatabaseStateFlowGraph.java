@@ -17,12 +17,7 @@ import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.TARGET_S
 import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.URL_IN_NODES;
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.GraphPath;
@@ -52,7 +48,6 @@ import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.index.RelationshipIndex;
-import org.neo4j.helpers.UTF8;
 import org.neo4j.kernel.Traversal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -485,7 +480,13 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		toBeAddedNode.setProperty(SERIALIZED_STATE_VERTEX_IN_NODES,
 		        serializedSV);
 		toBeAddedNode.setProperty(STRIPPED_DOM_IN_NODES,
-		        UTF8.decode((UTF8.encode(state.getStrippedDom()))));
+		        decEndecUTF8(state.getStrippedDom()));
+	}
+
+	private String decEndecUTF8(String str) {
+
+		// String str2 = UTF8.decode(UTF8.encode(str));
+		return str;
 	}
 
 	/**
@@ -567,15 +568,14 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		        serializedEventable);
 
 		toBeAddedEdge.setProperty(CLICKABLE_IN_EDGES,
-		        UTF8.decode(UTF8.encode(eventable.toString())));
+		        decEndecUTF8(eventable.toString()));
 
 		toBeAddedEdge.setProperty(SOURCE_STRIPPED_DOM_IN_EDGES,
-		        UTF8.decode((UTF8.encode(sourceVert
-		                .getStrippedDom()))));
+		        decEndecUTF8(sourceVert
+		                .getStrippedDom()));
 		toBeAddedEdge
-		        .setProperty(TARGET_STRIPPED_DOM_IN_EDGES, UTF8
-		                .decode(UTF8.encode(targetVert
-		                        .getStrippedDom())));
+		        .setProperty(TARGET_STRIPPED_DOM_IN_EDGES, decEndecUTF8(targetVert
+		                .getStrippedDom()));
 
 	}
 
@@ -1233,73 +1233,80 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	public static byte[] serializeStateVertex(StateVertex stateVertex) {
 
-		// for storing the return value
-		byte[] serializedStateVertex = null;
-
-		// this an output stream that does not require writing to the file and instead the output
-		// stream is stored in a buffer we use this class to utilize the Java serialization api
-		// which writes and reads objects to and from streams
-
-		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		        ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-
-			// Serializing the stateVertex object to the stream
-
-			oos.writeObject(stateVertex);
-
-			// converting the byte array to UTF-8 string for portability reasons
-
-			serializedStateVertex = baos.toByteArray();
-
-		} catch (IOException e) {
-			throw new CrawljaxException(e.getMessage(), e);
-		}
-
-		return serializedStateVertex;
+		// // for storing the return value
+		// byte[] serializedStateVertex = null;
+		//
+		// // this an output stream that does not require writing to the file and instead the output
+		// // stream is stored in a buffer we use this class to utilize the Java serialization api
+		// // which writes and reads objects to and from streams
+		//
+		// try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		// ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+		//
+		// // Serializing the stateVertex object to the stream
+		//
+		// oos.writeObject(stateVertex);
+		//
+		// // converting the byte array to UTF-8 string for portability reasons
+		//
+		// serializedStateVertex = baos.toByteArray();
+		//
+		// } catch (IOException e) {
+		// throw new CrawljaxException(e.getMessage(), e);
+		// }
+		//
+		// return serializedStateVertex;
+		return SerializationUtils.serialize(stateVertex);
 	}
 
 	public static StateVertex deserializeStateVertex(
 	        byte[] serializedStateVertex) {
-		StateVertex deserializedSV = null;
+		// StateVertex deserializedSV = null;
+		//
+		// try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(
+		// serializedStateVertex))) {
+		// deserializedSV = (StateVertex) ois.readObject();
+		// } catch (Exception e) {
+		// throw new CrawljaxException(e.getMessage(), e);
+		// }
+		// return deserializedSV;
 
-		try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(
-		        serializedStateVertex))) {
-			deserializedSV = (StateVertex) ois.readObject();
-		} catch (Exception e) {
-			throw new CrawljaxException(e.getMessage(), e);
-		}
-		return deserializedSV;
+		return (StateVertex) SerializationUtils.deserialize(serializedStateVertex);
 
 	}
 
 	public static byte[] serializeEventable(Eventable eventable) {
-		byte[] serializedEventable = null;
+		// byte[] serializedEventable = null;
+		//
+		// // this an output stream that does not require writing to the file and instead the output
+		// // stream is stored in a buffer we use this class to utilize the Java serialization api
+		// // which writes and reads object to and from streams
+		// try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		// ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+		// // serializing the Eventable object to the stream
+		// oos.writeObject(eventable);
+		// // converting the byte array to UTF-8 string for portability reasons
+		// serializedEventable = baos.toByteArray();
+		// } catch (IOException e) {
+		// throw new CrawljaxException(e.getMessage(), e);
+		// }
+		// return serializedEventable;
 
-		// this an output stream that does not require writing to the file and instead the output
-		// stream is stored in a buffer we use this class to utilize the Java serialization api
-		// which writes and reads object to and from streams
-		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		        ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-			// serializing the Eventable object to the stream
-			oos.writeObject(eventable);
-			// converting the byte array to UTF-8 string for portability reasons
-			serializedEventable = baos.toByteArray();
-		} catch (IOException e) {
-			throw new CrawljaxException(e.getMessage(), e);
-		}
-		return serializedEventable;
+		return SerializationUtils.serialize(eventable);
 	}
 
 	public static Eventable deserializeEventable(byte[] serializedEventable) {
-		Eventable deserializedEventable = null;
-		try (ByteArrayInputStream bais = new ByteArrayInputStream(
-		        serializedEventable);
-		        ObjectInputStream ois = new ObjectInputStream(bais)) {
-			deserializedEventable = (Eventable) ois.readObject();
-		} catch (Exception e) {
-			throw new CrawljaxException(e.getMessage(), e);
-		}
-		return deserializedEventable;
+		// Eventable deserializedEventable = null;
+		// try (ByteArrayInputStream bais = new ByteArrayInputStream(
+		// serializedEventable);
+		// ObjectInputStream ois = new ObjectInputStream(bais)) {
+		// deserializedEventable = (Eventable) ois.readObject();
+		// } catch (Exception e) {
+		// throw new CrawljaxException(e.getMessage(), e);
+		// }
+		// return deserializedEventable;
+
+		return (Eventable) SerializationUtils.deserialize(serializedEventable);
 	}
 
 	public DirectedGraph<StateVertex, Eventable> buildJgraphT() {
