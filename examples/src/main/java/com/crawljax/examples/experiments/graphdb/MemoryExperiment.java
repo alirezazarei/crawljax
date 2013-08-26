@@ -1,12 +1,11 @@
 /**
  * 
  */
-package com.crawljax.examples;
+package com.crawljax.examples.experiments.graphdb;
 
 import javax.swing.JOptionPane;
 
 import com.crawljax.core.state.StateFlowGraph;
-import com.crawljax.examples.experiments.graphdb.correctness.CorrecnessExperiment;
 
 /**
  * @author arz
@@ -33,12 +32,14 @@ public class MemoryExperiment {
 		StringBuffer message = new StringBuffer();
 		StateFlowGraph sfg = null;
 		try {
+
+			// sfg = CorrecnessExperiment.crawlInDb(URL);
+
 			sfg = CorrecnessExperiment.crawlInMemory(URL);
 		} catch (Exception e) {
 			message.append(e).append("\n").append(e.getMessage()).append('\n');
 
 		}
-		// CorrecnessExperiment.crawlInDb(URL);
 
 		long endTime = System.currentTimeMillis() - startTime;
 		long time = endTime / 1000;

@@ -1,4 +1,4 @@
-package com.crawljax.examples.experiments.graphdb.correctness;
+package com.crawljax.examples.experiments.graphdb;
 
 import java.util.ArrayList;
 import java.util.List;
