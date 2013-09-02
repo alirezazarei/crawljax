@@ -28,6 +28,7 @@ import com.crawljax.core.state.Eventable;
 import com.crawljax.core.state.Eventable.EventType;
 import com.crawljax.core.state.Identification;
 import com.crawljax.core.state.StateFlowGraph;
+import com.crawljax.core.state.StateFlowGraph.StateFlowGraphType;
 import com.crawljax.core.state.StateMachine;
 import com.crawljax.core.state.StateVertex;
 import com.crawljax.di.CoreModule.CandidateElementExtractorFactory;
@@ -96,7 +97,12 @@ public class Crawler {
 	public void reset() {
 		CrawlSession sess = context.getSession();
 		if (crawlpath != null) {
-			sess.addCrawlPath(crawlpath);
+			if (sess.getConfig().getGraphType() != StateFlowGraphType.SCALABLE) {
+				sess.addCrawlPath(crawlpath);
+			} else {
+				LOG.info("the crawlpath copy was not added to the paths because we do not keep in the scalable version :D at reset");
+
+			}
 		}
 		stateMachine =
 		        new StateMachine(graphProvider.get(),
@@ -371,7 +377,13 @@ public class Crawler {
 			}
 		} else {
 			LOG.debug("New DOM is a clone state. Continuing in that state.");
-			context.getSession().addCrawlPath(crawlpath.immutableCopy());
+			if (context.getConfig().getGraphType() != StateFlowGraphType.SCALABLE) {
+				context.getSession().addCrawlPath(crawlpath.immutableCopy());
+			} else {
+				// JOptionPane.showMessageDialog(null, "it is adding it to the paths!!");
+				LOG.info("the crawlpath copy was not added to the paths because we do not keep in the scalable version :D at clone");
+
+			}
 		}
 	}
 
