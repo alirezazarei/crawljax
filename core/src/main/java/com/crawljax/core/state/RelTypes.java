@@ -13,5 +13,5 @@ public enum RelTypes implements RelationshipType {
 	// there is a directed edge from state A to state B
 	// if there is a clickable in state A which transitions from A to B.
 
-	TRANSITIONS_TO, INDEXES, REFRENCES
+	TRANSITIONS_TO, INDEXES, REFRENCES, REFERENCES_CRAWLPATH
 }

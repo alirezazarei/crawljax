@@ -5,6 +5,10 @@ package com.crawljax.core.state;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import org.junit.Test;
 
 import com.crawljax.core.ExitNotifier;
@@ -146,6 +150,108 @@ public class InDatabaseStateFlowGraphTest extends StateFlowGraphTest {
 
 		assertTrue(inDbGraph.buildJgraphT().edgeSet().size() == numberOfEdges);
 
+	}
+
+	@Test
+	public void testWhenACrawlPathIsAddedTheNumberOfCrawlPathsIsIncreasesByOne() {
+
+		List<Eventable> path = createAPath();
+
+		((InDatabaseStateFlowGraph) graph).addCrawlPath(path);
+
+		assertTrue(((InDatabaseStateFlowGraph) graph).getCrawlPathsSize() == 1);
+
+	}
+
+	@Test
+	public void testWhenACrawlPathIsAddedAndThenRetrievedTheyAreTheSamee() {
+
+		List<Eventable> path = createAPath();
+
+		((InDatabaseStateFlowGraph) graph).addCrawlPath(path);
+
+		ConcurrentLinkedQueue<List<Eventable>> paths =
+		        (ConcurrentLinkedQueue<List<Eventable>>) ((InDatabaseStateFlowGraph) graph)
+		                .getCrawlPaths();
+
+		List<Eventable> retrievedPath = paths.peek();
+
+		assertTrue(retrievedPath.equals(path));
+
+	}
+
+	@Test
+	public void testWhenTwoCrawlPathAreAddedAndThenRetrievedTheyAreTheSame() {
+
+		List<Eventable> path1 = createAPath();
+		List<Eventable> path2 = createAnotherPath();
+
+		((InDatabaseStateFlowGraph) graph).addCrawlPath(path1);
+		((InDatabaseStateFlowGraph) graph).addCrawlPath(path2);
+
+		ConcurrentLinkedQueue<List<Eventable>> retrievedPaths =
+		        (ConcurrentLinkedQueue<List<Eventable>>) ((InDatabaseStateFlowGraph) graph)
+		                .getCrawlPaths();
+
+		assertTrue(retrievedPaths.contains(path1));
+		assertTrue(retrievedPaths.contains(path2));
+
+	}
+
+	@Test
+	public void testWhenManyPathAreInseretedTheNumberOfPathsGoesWellWithTheSizeMethod() {
+
+		int manyTimes = 1000;
+
+		List<Eventable> path1 = createAPath();
+		List<Eventable> path2 = createAnotherPath();
+
+		for (int i = 0; i < manyTimes; i++) {
+
+			((InDatabaseStateFlowGraph) graph).addCrawlPath(path1);
+			((InDatabaseStateFlowGraph) graph).addCrawlPath(path2);
+
+		}
+
+		assertTrue(((InDatabaseStateFlowGraph) graph).getCrawlPaths().size() == manyTimes * 2);
+		assertTrue(((InDatabaseStateFlowGraph) graph).getCrawlPathsSize() == manyTimes * 2);
+
+	}
+
+	private List<Eventable> createAPath() {
+
+		Eventable e1 = newXpathEventable("/body/div[1]");
+		e1.setSource(index);
+		e1.setTarget(state2);
+		Eventable e2 = newXpathEventable("/body/div[2]");
+		e2.setSource(state2);
+		e2.setTarget(state3);
+		Eventable e3 = newXpathEventable("/body/div[3]");
+		e3.setSource(state3);
+		e3.setTarget(state4);
+
+		List<Eventable> path = new ArrayList<Eventable>();
+		path.add(e1);
+		path.add(e2);
+		path.add(e3);
+
+		return path;
+	}
+
+	private List<Eventable> createAnotherPath() {
+
+		Eventable e1 = newXpathEventable("/body/div[4]");
+		e1.setSource(state4);
+		e1.setTarget(state5);
+		Eventable e2 = newXpathEventable("/body/div[5]");
+		e2.setSource(state5);
+		e2.setTarget(index);
+
+		List<Eventable> path = new ArrayList<Eventable>();
+		path.add(e1);
+		path.add(e2);
+
+		return path;
 	}
 
 }

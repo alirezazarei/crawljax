@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.SerializationUtils;
@@ -123,6 +125,11 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 */
 	private Index<Node> nodeIndex;
 	private RelationshipIndex edgesIndex;
+
+	/**
+	 * the node for referencing the crawlpaths which are stored during the crawl
+	 */
+	private Node crawlPathRoot;
 
 	/**
 	 * @param exitNotifier
@@ -284,6 +291,19 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		}
 
 		this.root = indexNode;
+
+		Node crawlPathsIndex = null;
+		tx = sfgDb.beginTx();
+		try {
+			crawlPathsIndex = sfgDb.createNode();
+			crawlPathsIndex.setProperty(NODE_TYPE, "crawlPathIndex");
+
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+
+		this.crawlPathRoot = crawlPathsIndex;
 
 	}
 
@@ -1426,4 +1446,81 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		return null;
 	}
 
+	/**
+	 * @param crawlPath
+	 *            the list of eventabls which forms the current crawledPath so far
+	 */
+
+	public void addCrawlPath(List<Eventable> crawlPath) {
+
+		int position = 0;
+
+		Transaction tx = sfgDb.beginTx();
+		try {
+			Node crawlPathNode = sfgDb.createNode();
+			crawlPathNode.setProperty(NODE_TYPE, "crawlPath");
+
+			Relationship link =
+			        this.crawlPathRoot.createRelationshipTo(crawlPathNode,
+			                RelTypes.REFERENCES_CRAWLPATH);
+
+			for (Eventable eventable : crawlPath) {
+
+				byte[] serializedEventable = serializeEventable(eventable);
+				crawlPathNode.setProperty(Integer.toString(position), serializedEventable);
+				position++;
+
+			}
+
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+
+	}
+
+	/**
+	 * @return the crawlPaths
+	 */
+	public Collection<List<Eventable>> getCrawlPaths() {
+
+		Collection<List<Eventable>> crawlPaths = new ConcurrentLinkedQueue<List<Eventable>>();
+
+		for (Relationship relationShip : crawlPathRoot.getRelationships(Direction.OUTGOING,
+		        RelTypes.REFERENCES_CRAWLPATH)) {
+
+			Node crawlPathNode = relationShip.getEndNode();
+
+			List<Eventable> aCrawlPath = new ArrayList<Eventable>();
+
+			int position = 0;
+			Object eventable = crawlPathNode.getProperty(Integer.toString(position), null);
+
+			while (eventable != null) {
+
+				byte[] serializedEventable = (byte[]) eventable;
+				Eventable deserializedEventable = deserializeEventable(serializedEventable);
+				aCrawlPath.add(deserializedEventable);
+
+				position++;
+				eventable = crawlPathNode.getProperty(Integer.toString(position), null);
+
+			}
+
+			crawlPaths.add(aCrawlPath);
+		}
+
+		return crawlPaths;
+	}
+
+	public int getCrawlPathsSize() {
+		int size = 0;
+
+		for (Relationship relationShip : crawlPathRoot.getRelationships(Direction.OUTGOING,
+		        RelTypes.REFERENCES_CRAWLPATH)) {
+			size++;
+		}
+
+		return size;
+	}
 }
