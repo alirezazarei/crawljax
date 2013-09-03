@@ -11,7 +11,9 @@ import javax.inject.Singleton;
 import com.crawljax.browser.EmbeddedBrowser;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.state.Eventable;
+import com.crawljax.core.state.InDatabaseStateFlowGraph;
 import com.crawljax.core.state.StateFlowGraph;
+import com.crawljax.core.state.StateFlowGraph.StateFlowGraphType;
 import com.crawljax.core.state.StateVertex;
 
 /**
@@ -71,7 +73,15 @@ public class CrawlSession {
 	 * @return the crawlPaths
 	 */
 	public Collection<List<Eventable>> getCrawlPaths() {
-		return crawlPaths;
+
+		if (config.getGraphType() == StateFlowGraphType.SCALABLE) {
+			Collection<List<Eventable>> crawlPathsFromDatabase =
+			        ((InDatabaseStateFlowGraph) stateFlowGraph).getCrawlPaths();
+			return crawlPathsFromDatabase;
+		} else {
+			return crawlPaths;
+
+		}
 	}
 
 	/**
@@ -79,7 +89,13 @@ public class CrawlSession {
 	 *            the eventable list
 	 */
 	public void addCrawlPath(List<Eventable> crawlPath) {
-		this.crawlPaths.add(crawlPath);
+
+		if (config.getGraphType() == StateFlowGraphType.SCALABLE) {
+			((InDatabaseStateFlowGraph) stateFlowGraph).addCrawlPath(crawlPath);
+		} else {
+			this.crawlPaths.add(crawlPath);
+		}
+
 	}
 
 	/**

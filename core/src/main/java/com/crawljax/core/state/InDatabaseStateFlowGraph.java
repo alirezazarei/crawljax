@@ -1453,6 +1453,8 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	public void addCrawlPath(List<Eventable> crawlPath) {
 
+		LOG.info("the crawlpath copy was saved to the database instead of memory");
+
 		int position = 0;
 
 		Transaction tx = sfgDb.beginTx();
