@@ -1457,26 +1457,37 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 		int position = 0;
 
+		Node crawlPathNode = null;
+		Relationship link = null;
+
 		Transaction tx = sfgDb.beginTx();
 		try {
-			Node crawlPathNode = sfgDb.createNode();
+			crawlPathNode = sfgDb.createNode();
 			crawlPathNode.setProperty(NODE_TYPE, "crawlPath");
 
-			Relationship link =
-			        this.crawlPathRoot.createRelationshipTo(crawlPathNode,
-			                RelTypes.REFERENCES_CRAWLPATH);
-
-			for (Eventable eventable : crawlPath) {
-
-				byte[] serializedEventable = serializeEventable(eventable);
-				crawlPathNode.setProperty(Integer.toString(position), serializedEventable);
-				position++;
-
-			}
-
+			link = this.crawlPathRoot.createRelationshipTo(crawlPathNode,
+			        RelTypes.REFERENCES_CRAWLPATH);
 			tx.success();
 		} finally {
 			tx.finish();
+		}
+
+		if ((crawlPathNode != null) && (link != null)) {
+
+			for (Eventable eventable : crawlPath) {
+				Transaction transcation = sfgDb.beginTx();
+				try {
+					byte[] serializedEventable = serializeEventable(eventable);
+					crawlPathNode.setProperty(Integer.toString(position), serializedEventable);
+					position++;
+					transcation.success();
+				} finally {
+					transcation.finish();
+
+				}
+
+			}
+
 		}
 
 	}

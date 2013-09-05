@@ -21,7 +21,7 @@ public class MemoryExperiment {
 	// "http://www.yahoo.com";
 	// "http://localhost/correctness/c5__MemoryExpObject.htm";
 	public static int MAX_STATES = 20000;
-	public static int MAX_DEPTH = 3;
+	public static int MAX_DEPTH = 30;
 
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
@@ -33,9 +33,9 @@ public class MemoryExperiment {
 		StateFlowGraph sfg = null;
 		try {
 
-		// sfg = CorrecnessExperiment.crawlInDb(URL);
+		sfg = CorrecnessExperiment.crawlInDb(URL);
 
-		sfg = CorrecnessExperiment.crawlInMemory(URL);
+		//sfg = CorrecnessExperiment.crawlInMemory(URL);
 		} catch (Exception e) {
 			message.append(e).append("\n").append(e.getMessage()).append('\n');
 
