@@ -40,6 +40,9 @@ public class StateMachine {
 
 	private final StateComparator stateComparator;
 
+	public static double average = 0;
+	public static int count = 0;
+
 	/**
 	 * Create a new StateMachine.
 	 * 
@@ -125,7 +128,11 @@ public class StateMachine {
 			stateFlowGraph.addEdge(currentState, cloneState, eventable);
 		} else {
 			stateFlowGraph.addEdge(currentState, newState, eventable);
+			int newSize = newState.getDom().length();
+			average = (average * count + newSize) / (double) (count + 1);
+			count++;
 			LOGGER.info("State {} added to the StateMachine.", newState.getName());
+			LOGGER.info("average dom size: {} and found states so far : {}", average, count);
 		}
 
 		// Add the Edge
