@@ -130,11 +130,6 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	private RelationshipIndex edgesIndex;
 
 	/**
-	 * the node for referencing the crawlpaths which are stored during the crawl
-	 */
-	private Node crawlPathRoot;
-
-	/**
 	 * @param exitNotifier
 	 */
 	@Inject
@@ -294,19 +289,6 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		}
 
 		this.root = indexNode;
-
-		Node crawlPathsIndex = null;
-		tx = sfgDb.beginTx();
-		try {
-			crawlPathsIndex = sfgDb.createNode();
-			crawlPathsIndex.setProperty(NODE_TYPE, "crawlPathIndex");
-
-			tx.success();
-		} finally {
-			tx.finish();
-		}
-
-		this.crawlPathRoot = crawlPathsIndex;
 
 	}
 
@@ -1495,7 +1477,6 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	}
 
 	private List<Eventable> retrieveACrawlPahtFromDb(List<Integer> crawlPahtCodes) {
-		// TODO Auto-generated method stub
 
 		List<Eventable> aCrawlPath = new ArrayList<Eventable>();
 
