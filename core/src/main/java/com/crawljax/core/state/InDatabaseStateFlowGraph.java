@@ -90,6 +90,9 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	private static ExitPermission terminationPermission = ExitPermission.EXIT_ALLOWED;
 
+	private final Collection<List<Integer>> crawlPaths =
+	        new ConcurrentLinkedQueue<List<Integer>>();
+
 	public static void setTerminationPermission(ExitPermission lastEdgeSet) {
 		terminationPermission = lastEdgeSet;
 	}
@@ -1453,42 +1456,23 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	public void addCrawlPath(List<Eventable> crawlPath) {
 
-		LOG.info("the crawlpath copy was saved to the database instead of memory");
+		if ((crawlPath == null) || crawlPath.isEmpty()) {
+			return;
+		}
+		List<Integer> crawlpathCodes = new ArrayList<Integer>();
 
-		int position = 0;
+		int sourceHash = crawlPath.get(0).getSourceStateVertex().hashCode();
 
-		Node crawlPathNode = null;
-		Relationship link = null;
-
-		Transaction tx = sfgDb.beginTx();
-		try {
-			crawlPathNode = sfgDb.createNode();
-			crawlPathNode.setProperty(NODE_TYPE, "crawlPath");
-
-			link = this.crawlPathRoot.createRelationshipTo(crawlPathNode,
-			        RelTypes.REFERENCES_CRAWLPATH);
-			tx.success();
-		} finally {
-			tx.finish();
+		for (Eventable edge : crawlPath) {
+			int edgeHash = edge.toString().hashCode();
+			int targetHash = edge.getTargetStateVertex().hashCode();
+			int edgeIndex = sourceHash + targetHash + edgeHash;
+			sourceHash = targetHash;
+			crawlpathCodes.add(edgeIndex);
 		}
 
-		if ((crawlPathNode != null) && (link != null)) {
-
-			for (Eventable eventable : crawlPath) {
-				Transaction transcation = sfgDb.beginTx();
-				try {
-					byte[] serializedEventable = serializeEventable(eventable);
-					crawlPathNode.setProperty(Integer.toString(position), serializedEventable);
-					position++;
-					transcation.success();
-				} finally {
-					transcation.finish();
-
-				}
-
-			}
-
-		}
+		this.crawlPaths.add(crawlpathCodes);
+		LOG.info("the crawlpath lightweight saving is implelemted by database ");
 
 	}
 
@@ -1499,41 +1483,74 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 		Collection<List<Eventable>> crawlPaths = new ConcurrentLinkedQueue<List<Eventable>>();
 
-		for (Relationship relationShip : crawlPathRoot.getRelationships(Direction.OUTGOING,
-		        RelTypes.REFERENCES_CRAWLPATH)) {
-
-			Node crawlPathNode = relationShip.getEndNode();
-
-			List<Eventable> aCrawlPath = new ArrayList<Eventable>();
-
-			int position = 0;
-			Object eventable = crawlPathNode.getProperty(Integer.toString(position), null);
-
-			while (eventable != null) {
-
-				byte[] serializedEventable = (byte[]) eventable;
-				Eventable deserializedEventable = deserializeEventable(serializedEventable);
-				aCrawlPath.add(deserializedEventable);
-
-				position++;
-				eventable = crawlPathNode.getProperty(Integer.toString(position), null);
-
-			}
+		for (Iterator<List<Integer>> crawlPahtIt = this.crawlPaths.iterator(); crawlPahtIt
+		        .hasNext();) {
+			List<Eventable> aCrawlPath = retrieveACrawlPahtFromDb(crawlPahtIt.next());
 
 			crawlPaths.add(aCrawlPath);
+
 		}
 
 		return crawlPaths;
 	}
 
+	private List<Eventable> retrieveACrawlPahtFromDb(List<Integer> crawlPahtCodes) {
+		// TODO Auto-generated method stub
+
+		List<Eventable> aCrawlPath = new ArrayList<Eventable>();
+
+		for (Integer edgeCode : crawlPahtCodes) {
+
+			Relationship relationship = getEdgeFromDB(edgeCode);
+			Node sourceNode = relationship.getStartNode();
+			Node endNode = relationship.getEndNode();
+
+			Eventable eventable = edgeToEventable(relationship);
+			eventable.setSource(nodeToState(sourceNode));
+			eventable.setTarget(nodeToState(endNode));
+			aCrawlPath.add(eventable);
+
+		}
+		return aCrawlPath;
+
+	}
+
+	private Relationship getEdgeFromDB(Integer edgeCode) {
+
+		Relationship r = null;
+		Transaction tx = sfgDb.beginTx();
+		try {
+
+			r =
+			        edgesIndex
+			                .get(SOURCE_CLICKABLE_TARGET_IN_EDGES_FOR_UNIQUE_INDEXING, edgeCode)
+			                .getSingle();
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+		return r;
+	}
+
+	private StateVertex getStateFromDB(int nodeHash) {
+
+		StateVertex state = null;
+		Transaction tx = sfgDb.beginTx();
+		try {
+
+			Node node = nodeIndex.get(NODES_INDEX_IN_THE_NODE_INDEX, nodeHash).getSingle();
+			state = nodeToState(node);
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+		return state;
+	}
+
 	public int getCrawlPathsSize() {
 		int size = 0;
 
-		for (Relationship relationShip : crawlPathRoot.getRelationships(Direction.OUTGOING,
-		        RelTypes.REFERENCES_CRAWLPATH)) {
-			size++;
-		}
-
+		size = this.crawlPaths.size();
 		return size;
 	}
 }
