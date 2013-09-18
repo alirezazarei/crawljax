@@ -534,9 +534,11 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	public boolean addEdge(StateVertex sourceVert, StateVertex targetVert,
 	        Eventable eventable) {
 
+		eventable.setSource(null);
+		eventable.setTarget(null);
+		byte[] serializedEventable = serializeEventable(eventable);
 		eventable.setSource(sourceVert);
 		eventable.setTarget(targetVert);
-		byte[] serializedEventable = serializeEventable(eventable);
 
 		Relationship toBeAddedEdge = null;
 		Relationship alreadyExists = null;
@@ -551,6 +553,8 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 			} else {
 				addEssentialEdgeProperties(toBeAddedEdge, sourceVert, eventable, targetVert,
 				        serializedEventable);
+				// addAdditionalEdgeProperties(toBeAddedEdge, sourceVert, eventable, targetVert,
+				// serializedEventable);
 			}
 			tx.success();
 		} finally {
@@ -571,6 +575,11 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 		toBeAddedEdge.setProperty(SERIALIZED_CLICKABLE_IN_EDGES,
 		        serializedEventable);
+
+	}
+
+	private void addAdditionalEdgeProperties(Relationship toBeAddedEdge, StateVertex sourceVert,
+	        Eventable eventable, StateVertex targetVert, byte[] serializedEventable) {
 
 		toBeAddedEdge.setProperty(CLICKABLE_IN_EDGES,
 		        decEndecUTF8(eventable.toString()));
