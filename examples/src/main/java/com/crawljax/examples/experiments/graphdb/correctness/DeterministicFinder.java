@@ -17,20 +17,42 @@ public class DeterministicFinder {
 		System.setProperty("webdriver.firefox.bin",
 		        "/ubc/ece/home/am/grads/azarei/firefox 7/firefox/firefox-bin");
 
-		CorrecnessExperiment.setMaxState(15);
+		CorrecnessExperiment.setMaxState(50);
 		CorrecnessExperiment.setMAX_DEPTH(5);
 
 		List<String> urls = new ArrayList<String>();
 
 		Set<String> alreadyTestedUrls = new HashSet<String>();
 
-		alreadyTestedUrls.addAll(urls);
-		urls.clear();
+		// /////////////////////////////////////////////////////
+		// ///////////////////first set//////////////////////////////////
+		// /////////////////////////////////////////////////////
+		// /////////////////////////////////////////////////////
 
-		urls.add("http://metrics.codahale.com/");
-		urls.add("http://www.facebook.com");
+		// ////////////////50 det//////////////
+
+		urls.add("http://www.heatcityreview.com/somervillenews.htm");
+		urls.add("http://www.martinkrenn.net/");
+		urls.add("http://www.kastanova.nl/");
+		urls.add("http://www.al-awda.org/");
+		urls.add("http://thething.it/");
+		urls.add("http://www.engruppo.com/");
+		urls.add("http://www.turbopatents.com/");
+
+		// ////////15 det ///////////////////////////////
+
 		urls.add("http://www.ece.ubc.ca/");
 		urls.add("http://www.ubc.ca/");
+
+		// /////////////// non det////////////////////////
+
+		urls.add("http://www.cultofmac.com/");
+		urls.add("http://www.python.org/");
+		urls.add("http://metrics.codahale.com/");
+		urls.add("http://www.uss.de/");
+
+		urls.add("http://www.facebook.com");
+
 		urls.add("https://www.google.ca/");
 		urls.add("http://www.bing.com/");
 		urls.add("https://mail.google.com/");
@@ -38,17 +60,13 @@ public class DeterministicFinder {
 		urls.add("https://code.google.com/p/guava-libraries/");
 		urls.add("http://www.vogella.com/");
 		urls.add("http://www.cacno.org");
-		urls.add("http://www.cultofmac.com/");
-		urls.add("http://www.heatcityreview.com/somervillenews.htm");
+
 		urls.add("http://sedo.co.uk/search/details.php4?domain=thestart.net");
 		urls.add("http://www.iltasanomat.fi/");
 		urls.add("http://www.fairvote.org/");
 		urls.add("http://www.beehive.nu/");
-		urls.add("http://www.uss.de/");
 		urls.add("http://www.littlewhitedog.com/");
 
-		urls.add("http://www.python.org/");
-		urls.add("http://www.martinkrenn.net/");
 		urls.add("http://www.provincetown.com/");
 		urls.add("http://www.expedia.ca/?semcid=ni.ask.12908&kword=DEFAULT.NNNN.kid&rfrr=Redirect.From.www.expedia.com/Home.htm");
 		urls.add("http://www.airtoons.com/");
@@ -59,14 +77,12 @@ public class DeterministicFinder {
 		urls.add("http://www.sfchronicle.com/");
 		urls.add("http://www.eldritch.com/");
 		urls.add("http://www.eldritch.com/");
-		urls.add("http://www.al-awda.org/");
-		urls.add("http://thething.it/");
+
 		urls.add("http://ruyguy15.150m.com/");
 		urls.add("http://www.bghs.org/");
 		urls.add("http://www.axis-of-aevil.net/");
 		urls.add("http://www.infoshop.org/");
 		urls.add("http://www.introducingmonday.co.uk/");
-		urls.add("http://www.engruppo.com/");
 
 		urls.add("http://www.linuxdevcenter.com/pub/a/linux/2000/06/29/hdparm.html");
 		urls.add("http://www.twentysevenrecords.com/");
@@ -76,7 +92,7 @@ public class DeterministicFinder {
 		urls.add("http://www.ottawacitizen.com/index.html");
 		urls.add("http://emeraldforestseattle.com/forums/ubbthreads/");
 		urls.add("http://www.cancernews.com/default2.asp");
-		urls.add("http://www.turbopatents.com/");
+
 		urls.add("http://www.usablenet.com/");
 		urls.add("http://www.viz.com/naruto");
 		urls.add("http://www.viz.com/naruto");
@@ -89,12 +105,57 @@ public class DeterministicFinder {
 		urls.add("http://antiadvertisingagency.com/");
 		urls.add("http://www.sfbike.org/");
 
+		// /////////////////////////////////////////////////////
+		// ////////////////end of first set beginning of next
+		// set/////////////////////////////////////
+		// /////////////////////////////////////////////////////
+		// /////////////////////////////////////////////////////
+
+		urls.add("http://www.grimemonster.com/");
+		urls.add("http://www.threadless.com/");
+		urls.add("https://wilwheaton.net/");
+		urls.add("http://www.hasbrouck.org/");
+		urls.add("http://www.uberbin.net/");
+		urls.add("http://www.gaijinagogo.com/");
+		urls.add("http://lalibertad.com.co/dia/p0.html");
+		urls.add("http://www.wrightfield.com/");
+
+		urls.add("http://www.modernhumorist.com/");
+		urls.add("http://www.bcdb.com/");
+		urls.add("http://desktopgaming.com/");
+		urls.add("http://www.metalbite.com/");
+		urls.add("http://nowyoulistentomelittlemissy.blogspot.ca/");
+		urls.add("http://www.cimgf.com/");
+		urls.add("http://www.paulmadonna.com/");
+		urls.add("http://dawnm.com/");
+
+		urls.add("http://typicalculture.com/wordpress/");
+
+		urls.add("http://www.vegweb.com/");
+		urls.add("http://www.newdream.org/");
+
+		alreadyTestedUrls.addAll(urls);
+		urls.clear();
+
+		// /////////////////// det 50
+		urls.add("http://c-level.org/"); // det 50
+		urls.add("http://rprogress.org/index.htm");// det 50
+		urls.add("http://www.math.mcgill.ca/");// det 50
+		urls.add("http://www.isc.org/downloads/BIND/");// det 1
+		urls.add("http://hunyyoung.com/"); // det 1
+		urls.add("http://home.planet.nl/~mooij321/"); // det 2
+		urls.add("http://www.antique-hangups.com/"); // det 1
+		urls.add("http://www.project451.com/");// DET 3
+		urls.add("http://lmuwnmd.wpengine.com/wp-signup.php?new=www.techblog.com");// det 1
+
 		for (String uRL : urls) {
 
 			if (alreadyTestedUrls.contains(uRL) == false) {
 				try {
+					StateFlowGraph inMemorySfg2 = CorrecnessExperiment.crawlInDb(uRL);
+
 					StateFlowGraph inMemorySfg = CorrecnessExperiment.crawlInMemory(uRL);
-					StateFlowGraph inMemorySfg2 = CorrecnessExperiment.crawlInMemory(uRL);
+
 					CorrecnessExperiment.createExperimentReport(inMemorySfg, inMemorySfg2, uRL);
 				} catch (Exception e) {
 
@@ -103,5 +164,4 @@ public class DeterministicFinder {
 		}
 
 	}
-
 }

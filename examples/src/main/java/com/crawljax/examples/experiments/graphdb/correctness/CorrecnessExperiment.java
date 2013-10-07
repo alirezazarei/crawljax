@@ -32,11 +32,14 @@ public class CorrecnessExperiment {
 
 	private static int MAX_STATES = 50;
 	private static int MAX_DEPTH = 5;
-	
-	private static String folder = "/ubc/ece/home/am/grads/azarei/work/Desktop/graph-db-experiemtns/correctness";
+
+	private static String folder =
+	        "/ubc/ece/home/am/grads/azarei/work/Desktop/graph-db-experiemtns/correctness";
+
 	public static void setFolder(String folder) {
 		CorrecnessExperiment.folder = folder;
 	}
+
 	public static String getFolder() {
 		return folder;
 	}
@@ -54,12 +57,19 @@ public class CorrecnessExperiment {
 	 */
 	public static void main(String[] args) {
 
+		System.setProperty("webdriver.firefox.bin",
+		        "/ubc/ece/home/am/grads/azarei/firefox 7/firefox/firefox-bin");
+
+		String url = "http://0.0.0.0:8000/c4__CorrectnessObject.htm";
+
+		correctnessExperimentOn(url);
+
 		// correcnessExperimentOn("http://www.ece.ubc.ca/~azarei");
 		// correctnessExperimentOn("http://www.google.com");
 		// correcnessExperimentOn("file://localhost/Users/arz/localhost/applications/chess/index.html");
 		// correcnessExperimentOn("http://demo.crawljax.com");
 		// correctnessExperimentOn("http://localhost/applications/phormer331/");
-		correctnessExperimentOn("http://localhost/applications/ajaxfilemanagerv_tinymce1.1/tinymce_test.php");
+		// correctnessExperimentOn("http://localhost/applications/ajaxfilemanagerv_tinymce1.1/tinymce_test.php");
 		// correctnessExperimentOn("http://localhost/correcNess/pluginTestFirst.htm");
 		// correctnessExperimentOn("http://localhost/correctness/c4.htm");
 
@@ -68,8 +78,8 @@ public class CorrecnessExperiment {
 
 	private static void correctnessExperimentOn(String uRL) {
 
-		StateFlowGraph inMemorySfg = crawlInMemory(uRL);
 		InDatabaseStateFlowGraph inDbSfg = new InDatabaseStateFlowGraph(new ExitNotifier(0));
+		StateFlowGraph inMemorySfg = crawlInMemory(uRL);
 		InDatabaseStateFlowGraph.saveSfgInDatabase(inMemorySfg, inDbSfg);
 
 		// StateFlowGraph inMemorySfg2 = crawlInMemory(uRL);
@@ -82,7 +92,7 @@ public class CorrecnessExperiment {
 
 	}
 
-	private static StateFlowGraph crawlInDb(String uRl) {
+	public static StateFlowGraph crawlInDb(String uRl) {
 
 		CrawljaxConfiguration inDatabaseConfiguration = buildInDatabaseConfiguration(uRl);
 		CrawljaxRunner inDatabaseCrawljax = new CrawljaxRunner(inDatabaseConfiguration);
@@ -102,6 +112,7 @@ public class CorrecnessExperiment {
 		setFolder(fold);
 		createExperimentReport(inMemorySfg, inDatabaseSfg, uRL);
 	}
+
 	public static void createExperimentReport(StateFlowGraph inMemorySfg,
 	        StateFlowGraph inDatabaseSfg, String uRL) {
 		String report = composeReport(inMemorySfg, inDatabaseSfg);
