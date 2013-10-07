@@ -5,6 +5,10 @@ package com.crawljax.examples.experiments.graphdb;
 
 import javax.swing.JOptionPane;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.crawljax.core.state.InDatabaseStateFlowGraph;
 import com.crawljax.core.state.StateFlowGraph;
 
 /**
@@ -12,11 +16,13 @@ import com.crawljax.core.state.StateFlowGraph;
  */
 public class MemoryExperiment {
 
+	private static final Logger LOG = LoggerFactory.getLogger(MemoryExperiment.class
+	        .getName());
 	/**
 	 * @param args
 	 */
 
-	public static String URL = "http:www.yahoo.com";
+	public static String URL = "http:www.amazon.com";
 	// "http://en.wikipedia.org/wiki/Main_Page";
 	// "http://www.yahoo.com";
 	// "http://localhost/correctness/c5__MemoryExpObject.htm";
@@ -33,9 +39,9 @@ public class MemoryExperiment {
 		StateFlowGraph sfg = null;
 		try {
 
-		sfg = CorrecnessExperiment.crawlInDb(URL);
+		//sfg = CorrecnessExperiment.crawlInDb(URL);
 
-		//sfg = CorrecnessExperiment.crawlInMemory(URL);
+		sfg = CorrecnessExperiment.crawlInMemory(URL);
 		} catch (Exception e) {
 			message.append(e).append("\n").append(e.getMessage()).append('\n');
 
@@ -47,9 +53,10 @@ public class MemoryExperiment {
 		int averageDomSize = sfg.getMeanStateStringSize();
 
 		message.append(
-		        "time: " + time + "\nnumber of states" + numberOfstates + "average mean size: "
+		        "time: " + time + "\nnumber of states" + numberOfstates + "\naverage mean size: "
 		                + averageDomSize);
 		JOptionPane.showMessageDialog(null, message);
+		LOG.info(message.toString());
 
 	}
 

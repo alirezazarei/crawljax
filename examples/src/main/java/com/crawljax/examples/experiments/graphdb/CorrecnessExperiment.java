@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableSet;
  */
 public class CorrecnessExperiment {
 
-	private static final int MAX_TIME = 8 * 60;
+	private static final int MAX_TIME = 24 * 60;
 	private static int MAX_STATES = 50;
 	private static int MAX_DEPTH = 5;
 
