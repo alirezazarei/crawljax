@@ -1,4 +1,4 @@
-package com.crawljax.examples.experiments.graphdb.correctness;
+package com.crawljax.examples.experiments.graphdb;
 
 import com.crawljax.core.CrawlerContext;
 import com.crawljax.core.plugin.OnNewStatePlugin;

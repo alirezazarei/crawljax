@@ -3,6 +3,7 @@ package com.crawljax.core.state;
 import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.CLICKABLE_IN_EDGES;
 import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.DOM_IN_NODES;
 import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.EDGES_INDEX_NAME;
+import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.NODES_INDEX_IN_THE_NODE_INDEX;
 import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.NODES_INDEX_NAME;
 import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.NODE_TYPE;
 import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.SERIALIZED_CLICKABLE_IN_EDGES;
@@ -16,21 +17,21 @@ import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.TARGET_S
 import static com.crawljax.core.state.InDatabaseStateFlowGraphConstants.URL_IN_NODES;
 import static com.google.common.base.Preconditions.checkArgument;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.GraphPath;
@@ -47,16 +48,15 @@ import org.neo4j.graphdb.Relationship;
 import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 import org.neo4j.graphdb.index.Index;
-import org.neo4j.graphdb.index.IndexHits;
 import org.neo4j.graphdb.index.IndexManager;
 import org.neo4j.graphdb.index.RelationshipIndex;
-import org.neo4j.helpers.UTF8;
 import org.neo4j.kernel.Traversal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.crawljax.core.CrawljaxException;
 import com.crawljax.core.ExitNotifier;
+import com.crawljax.core.state.InDatabaseStateFlowGraphConstants.ExitPermission;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -88,13 +88,16 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	private final ExitNotifier exitNotifier;
 
-	private static boolean terminationPermission = true;
+	private static ExitPermission terminationPermission = ExitPermission.EXIT_ALLOWED;
 
-	public static void setTerminationPermission(boolean lastEdgeSet) {
+	private final Collection<List<Integer>> crawlPaths =
+	        new ConcurrentLinkedQueue<List<Integer>>();
+
+	public static void setTerminationPermission(ExitPermission lastEdgeSet) {
 		terminationPermission = lastEdgeSet;
 	}
 
-	public static boolean getTerminationPermission() {
+	public static ExitPermission getTerminationPermission() {
 		return terminationPermission;
 	}
 
@@ -210,8 +213,26 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	private void setUpDatabase() {
 
 		setDatabasePath(buildDataBaseDirectory());
+		// todo
 
-		sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(getDatabasePath());
+		Map<String, String> config = new HashMap<String, String>();
+		config.put("use_memory_mapped_buffers", "true");
+		config.put("cache_type", "none");
+		config.put("use_memory_mapped_buffers", "true");
+		config.put("dump_configuration", "true");
+
+		// create a new store with string block size 60 and array block size 300
+		// sfgDb = new EmbeddedGraphDatabase(getDatabasePath(), config);
+		// sfgDb = new GraphDatabaseFactory().newEmbeddedDatabase(getDatabasePath());
+		// sfgDb =
+		// new GraphDatabaseFactory().newEmbeddedDatabaseBuilder(getDatabasePath())
+		// .setConfig(config).newGraphDatabase();
+
+		sfgDb = new GraphDatabaseFactory()
+		        .newEmbeddedDatabaseBuilder(getDatabasePath())
+		        .setConfig(config)
+		        .newGraphDatabase();
+
 	}
 
 	private String CreateDatabaseDirectory() {
@@ -314,7 +335,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 				// State was not already in the graph so it was placed in the graph and now the
 				// associated data is added here
 				addEssentialStateProperties(state, toBeAddedNode);
-				addAdditionalStateProperties(state, toBeAddedNode);
+				// addAdditionalStateProperties(state, toBeAddedNode);
 				tx.success();
 			}
 		} finally {
@@ -326,9 +347,9 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 			// be added to the graph before letting the executor send the termination interrupt.
 			// after that we could let the termination process go ahead.
 			if (state.getId() == StateVertex.INDEX_ID) {
-				setTerminationPermission(true);
+				setTerminationPermission(ExitPermission.EXIT_ALLOWED);
 			} else {
-				setTerminationPermission(false);
+				setTerminationPermission(ExitPermission.EXIT_NOT_ALLOWED);
 			}
 			int count = stateCounter.incrementAndGet();
 			exitNotifier.incrementNumberOfStates();
@@ -464,7 +485,13 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		toBeAddedNode.setProperty(SERIALIZED_STATE_VERTEX_IN_NODES,
 		        serializedSV);
 		toBeAddedNode.setProperty(STRIPPED_DOM_IN_NODES,
-		        UTF8.decode((UTF8.encode(state.getStrippedDom()))));
+		        decEndecUTF8(state.getStrippedDom()));
+	}
+
+	private String decEndecUTF8(String str) {
+
+		// String str2 = UTF8.decode(UTF8.encode(str));
+		return str;
 	}
 
 	/**
@@ -507,9 +534,11 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	public boolean addEdge(StateVertex sourceVert, StateVertex targetVert,
 	        Eventable eventable) {
 
+		eventable.setSource(null);
+		eventable.setTarget(null);
+		byte[] serializedEventable = serializeEventable(eventable);
 		eventable.setSource(sourceVert);
 		eventable.setTarget(targetVert);
-		byte[] serializedEventable = serializeEventable(eventable);
 
 		Relationship toBeAddedEdge = null;
 		Relationship alreadyExists = null;
@@ -524,6 +553,8 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 			} else {
 				addEssentialEdgeProperties(toBeAddedEdge, sourceVert, eventable, targetVert,
 				        serializedEventable);
+				// addAdditionalEdgeProperties(toBeAddedEdge, sourceVert, eventable, targetVert,
+				// serializedEventable);
 			}
 			tx.success();
 		} finally {
@@ -534,7 +565,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		// be added to the graph before letting the executor send the termination interrupt.
 		// after that we could let the termination process go ahead.
 
-		setTerminationPermission(true);
+		setTerminationPermission(ExitPermission.EXIT_ALLOWED);
 
 		return (alreadyExists == null);
 	}
@@ -545,16 +576,20 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		toBeAddedEdge.setProperty(SERIALIZED_CLICKABLE_IN_EDGES,
 		        serializedEventable);
 
+	}
+
+	private void addAdditionalEdgeProperties(Relationship toBeAddedEdge, StateVertex sourceVert,
+	        Eventable eventable, StateVertex targetVert, byte[] serializedEventable) {
+
 		toBeAddedEdge.setProperty(CLICKABLE_IN_EDGES,
-		        UTF8.decode(UTF8.encode(eventable.toString())));
+		        decEndecUTF8(eventable.toString()));
 
 		toBeAddedEdge.setProperty(SOURCE_STRIPPED_DOM_IN_EDGES,
-		        UTF8.decode((UTF8.encode(sourceVert
-		                .getStrippedDom()))));
+		        decEndecUTF8(sourceVert
+		                .getStrippedDom()));
 		toBeAddedEdge
-		        .setProperty(TARGET_STRIPPED_DOM_IN_EDGES, UTF8
-		                .decode(UTF8.encode(targetVert
-		                        .getStrippedDom())));
+		        .setProperty(TARGET_STRIPPED_DOM_IN_EDGES, decEndecUTF8(targetVert
+		                .getStrippedDom()));
 
 	}
 
@@ -587,23 +622,23 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 */
 	private int buildEdgeKey(StateVertex sourceVert, Eventable eventable,
 	        StateVertex targetVert) {
-		// array indexes for the triple key used in edge indexing
-		final int SOURCE_VERTEX_INDEX = 0;
-		final int TARGET_VERTEX_INDEX = 2;
-		final int CLICKABLE_INDEX = 1;
-
-		String[] edgeTriadKey = new String[3];
-		edgeTriadKey[SOURCE_VERTEX_INDEX] = UTF8.decode(UTF8
-		        .encode(sourceVert.getStrippedDom()));
-		edgeTriadKey[CLICKABLE_INDEX] = UTF8.decode(UTF8.encode(eventable
-		        .toString()));
-		edgeTriadKey[TARGET_VERTEX_INDEX] = UTF8.decode(UTF8
-		        .encode(targetVert.getStrippedDom()));
-
-		String edgeConcatenatedKey =
-		        edgeTriadKey[SOURCE_VERTEX_INDEX] + edgeTriadKey[CLICKABLE_INDEX]
-		                + edgeTriadKey[TARGET_VERTEX_INDEX];
-		// return edgeConcatenatedKey;
+		// // array indexes for the triple key used in edge indexing
+		// final int SOURCE_VERTEX_INDEX = 0;
+		// final int TARGET_VERTEX_INDEX = 2;
+		// final int CLICKABLE_INDEX = 1;
+		//
+		// String[] edgeTriadKey = new String[3];
+		// edgeTriadKey[SOURCE_VERTEX_INDEX] = UTF8.decode(UTF8
+		// .encode(sourceVert.getStrippedDom()));
+		// edgeTriadKey[CLICKABLE_INDEX] = UTF8.decode(UTF8.encode(eventable
+		// .toString()));
+		// edgeTriadKey[TARGET_VERTEX_INDEX] = UTF8.decode(UTF8
+		// .encode(targetVert.getStrippedDom()));
+		//
+		// String edgeConcatenatedKey =
+		// edgeTriadKey[SOURCE_VERTEX_INDEX] + edgeTriadKey[CLICKABLE_INDEX]
+		// + edgeTriadKey[TARGET_VERTEX_INDEX];
+		// // return edgeConcatenatedKey;
 
 		int hash =
 		        sourceVert.hashCode() + targetVert.hashCode() + eventable.toString().hashCode();
@@ -617,25 +652,27 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 */
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("[");
-		IndexHits<Node> nodes =
-		        nodeIndex.query(STRIPPED_DOM_IN_NODES, "*");
-		try {
-			for (Node node : nodes) {
-				String name = (String) node.getProperty(STATE_NAME_IN_NODES, "No Name Returned");
-				builder.append(name);
-				builder.append(", ");
-			}
-		} finally {
-			nodes.close();
-		}
-		int lastComma = builder.lastIndexOf(",");
-		if (lastComma == builder.length() - 2) {
-			builder.delete(lastComma, lastComma + 1);
-		}
-		builder.append("]");
-		return builder.toString();
+		// StringBuilder builder = new StringBuilder();
+		// builder.append("[");
+		// IndexHits<Node> nodes =
+		// nodeIndex.query(NODES_INDEX_IN_THE_NODE_INDEX, "*");
+		// try {
+		// for (Node node : nodes) {
+		// String name = (String) node.getProperty(STATE_NAME_IN_NODES, "No Name Returned");
+		// builder.append(name);
+		// builder.append(", ");
+		// }
+		// } finally {
+		// nodes.close();
+		// }
+		// int lastComma = builder.lastIndexOf(",");
+		// if (lastComma == builder.length() - 2) {
+		// builder.delete(lastComma, lastComma + 1);
+		// }
+		// builder.append("]");
+		// return builder.toString();
+
+		return "state flow graph!!";
 	}
 
 	/**
@@ -863,7 +900,6 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	@Override
 	public ImmutableSet<StateVertex> getAllStates() {
 
-		Set<StateVertex> allStates_ = new HashSet<StateVertex>();
 		ImmutableSet.Builder<StateVertex> allStates = new ImmutableSet.Builder<StateVertex>();
 		Transaction tx = sfgDb.beginTx();
 		try {
@@ -877,19 +913,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 				if (serializedNode != null) {
 					StateVertex state = deserializeStateVertex(serializedNode);
-					if (allStates_.contains(state)) {
-						for (StateVertex s : allStates_) {
-							if (s.equals(state)) {
-								System.out.println(state.getId());
-
-							}
-						}
-
-					}
-
 					allStates.add(state);
-					allStates_.add(state);
-
 				}
 			}
 			tx.success();
@@ -897,7 +921,7 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 			tx.finish();
 		}
 		ImmutableSet<StateVertex> resutl = allStates.build();
-		ImmutableSet<StateVertex> resutl_ = ImmutableSet.copyOf(allStates_);
+
 		return resutl;
 	}
 
@@ -945,7 +969,6 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	 * @return the copy of the StateVertix in the StateFlowGraph where v.equals(u)
 	 */
 	private StateVertex getStateInGraph(StateVertex state) {
-
 		Node node = getNodeFromDB(state);
 		StateVertex stateFromGraph = nodeToState(node);
 		return stateFromGraph;
@@ -1117,16 +1140,27 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	}
 
-	// private Node getNodeFromDB(StateVertex state) {
-	//
-	// Node node =
-	// nodeIndex.get(STRIPPED_DOM_IN_NODES, stateToIndex(state))
-	// .getSingle();
-	// return node;
-	//
-	// }
-	//
 	private Node getNodeFromDB(StateVertex state) {
+		Node result = null;
+		if (getTerminationPermission() == ExitPermission.ABOUT_TO_EXIT) {
+
+			result = getNodeFromDBByRoot(state);
+		} else {
+			result = getNodeFromDBByNodeIndex(state);
+		}
+		return result;
+	}
+
+	private Node getNodeFromDBByNodeIndex(StateVertex state) {
+
+		Node node =
+		        nodeIndex.get(NODES_INDEX_IN_THE_NODE_INDEX, stateToIndex(state))
+		                .getSingle();
+		return node;
+
+	}
+
+	private Node getNodeFromDBByRoot(StateVertex state) {
 		String strippedDom = state.getStrippedDom();
 		for (Relationship edge : root.getRelationships(RelTypes.INDEXES, Direction.OUTGOING)) {
 			Node node = edge.getEndNode();
@@ -1141,7 +1175,8 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 	private Node putIfAbsentNode(Node toBeAddedNode, StateVertex state) {
 
 		Node alreadyPresent =
-		        nodeIndex.putIfAbsent(toBeAddedNode, STRIPPED_DOM_IN_NODES, stateToIndex(state));
+		        nodeIndex.putIfAbsent(toBeAddedNode, NODES_INDEX_IN_THE_NODE_INDEX,
+		                stateToIndex(state));
 		if (alreadyPresent != null) {
 			return alreadyPresent;
 		}
@@ -1212,73 +1247,80 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 
 	public static byte[] serializeStateVertex(StateVertex stateVertex) {
 
-		// for storing the return value
-		byte[] serializedStateVertex = null;
-
-		// this an output stream that does not require writing to the file and instead the output
-		// stream is stored in a buffer we use this class to utilize the Java serialization api
-		// which writes and reads objects to and from streams
-
-		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		        ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-
-			// Serializing the stateVertex object to the stream
-
-			oos.writeObject(stateVertex);
-
-			// converting the byte array to UTF-8 string for portability reasons
-
-			serializedStateVertex = baos.toByteArray();
-
-		} catch (IOException e) {
-			throw new CrawljaxException(e.getMessage(), e);
-		}
-
-		return serializedStateVertex;
+		// // for storing the return value
+		// byte[] serializedStateVertex = null;
+		//
+		// // this an output stream that does not require writing to the file and instead the output
+		// // stream is stored in a buffer we use this class to utilize the Java serialization api
+		// // which writes and reads objects to and from streams
+		//
+		// try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		// ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+		//
+		// // Serializing the stateVertex object to the stream
+		//
+		// oos.writeObject(stateVertex);
+		//
+		// // converting the byte array to UTF-8 string for portability reasons
+		//
+		// serializedStateVertex = baos.toByteArray();
+		//
+		// } catch (IOException e) {
+		// throw new CrawljaxException(e.getMessage(), e);
+		// }
+		//
+		// return serializedStateVertex;
+		return SerializationUtils.serialize(stateVertex);
 	}
 
 	public static StateVertex deserializeStateVertex(
 	        byte[] serializedStateVertex) {
-		StateVertex deserializedSV = null;
+		// StateVertex deserializedSV = null;
+		//
+		// try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(
+		// serializedStateVertex))) {
+		// deserializedSV = (StateVertex) ois.readObject();
+		// } catch (Exception e) {
+		// throw new CrawljaxException(e.getMessage(), e);
+		// }
+		// return deserializedSV;
 
-		try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(
-		        serializedStateVertex))) {
-			deserializedSV = (StateVertex) ois.readObject();
-		} catch (Exception e) {
-			throw new CrawljaxException(e.getMessage(), e);
-		}
-		return deserializedSV;
+		return (StateVertex) SerializationUtils.deserialize(serializedStateVertex);
 
 	}
 
 	public static byte[] serializeEventable(Eventable eventable) {
-		byte[] serializedEventable = null;
+		// byte[] serializedEventable = null;
+		//
+		// // this an output stream that does not require writing to the file and instead the output
+		// // stream is stored in a buffer we use this class to utilize the Java serialization api
+		// // which writes and reads object to and from streams
+		// try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		// ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+		// // serializing the Eventable object to the stream
+		// oos.writeObject(eventable);
+		// // converting the byte array to UTF-8 string for portability reasons
+		// serializedEventable = baos.toByteArray();
+		// } catch (IOException e) {
+		// throw new CrawljaxException(e.getMessage(), e);
+		// }
+		// return serializedEventable;
 
-		// this an output stream that does not require writing to the file and instead the output
-		// stream is stored in a buffer we use this class to utilize the Java serialization api
-		// which writes and reads object to and from streams
-		try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		        ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-			// serializing the Eventable object to the stream
-			oos.writeObject(eventable);
-			// converting the byte array to UTF-8 string for portability reasons
-			serializedEventable = baos.toByteArray();
-		} catch (IOException e) {
-			throw new CrawljaxException(e.getMessage(), e);
-		}
-		return serializedEventable;
+		return SerializationUtils.serialize(eventable);
 	}
 
 	public static Eventable deserializeEventable(byte[] serializedEventable) {
-		Eventable deserializedEventable = null;
-		try (ByteArrayInputStream bais = new ByteArrayInputStream(
-		        serializedEventable);
-		        ObjectInputStream ois = new ObjectInputStream(bais)) {
-			deserializedEventable = (Eventable) ois.readObject();
-		} catch (Exception e) {
-			throw new CrawljaxException(e.getMessage(), e);
-		}
-		return deserializedEventable;
+		// Eventable deserializedEventable = null;
+		// try (ByteArrayInputStream bais = new ByteArrayInputStream(
+		// serializedEventable);
+		// ObjectInputStream ois = new ObjectInputStream(bais)) {
+		// deserializedEventable = (Eventable) ois.readObject();
+		// } catch (Exception e) {
+		// throw new CrawljaxException(e.getMessage(), e);
+		// }
+		// return deserializedEventable;
+
+		return (Eventable) SerializationUtils.deserialize(serializedEventable);
 	}
 
 	public DirectedGraph<StateVertex, Eventable> buildJgraphT() {
@@ -1398,4 +1440,107 @@ public class InDatabaseStateFlowGraph implements Serializable, StateFlowGraph {
 		return null;
 	}
 
+	/**
+	 * @param crawlPath
+	 *            the list of eventabls which forms the current crawledPath so far
+	 */
+
+	public void addCrawlPath(List<Eventable> crawlPath) {
+
+		if ((crawlPath == null) || crawlPath.isEmpty()) {
+			return;
+		}
+		List<Integer> crawlpathCodes = new ArrayList<Integer>();
+
+		int sourceHash = crawlPath.get(0).getSourceStateVertex().hashCode();
+
+		for (Eventable edge : crawlPath) {
+			int edgeHash = edge.toString().hashCode();
+			int targetHash = edge.getTargetStateVertex().hashCode();
+			int edgeIndex = sourceHash + targetHash + edgeHash;
+			sourceHash = targetHash;
+			crawlpathCodes.add(edgeIndex);
+		}
+
+		this.crawlPaths.add(crawlpathCodes);
+		LOG.info("the crawlpath lightweight saving is implelemted by database ");
+
+	}
+
+	/**
+	 * @return the crawlPaths
+	 */
+	public Collection<List<Eventable>> getCrawlPaths() {
+
+		Collection<List<Eventable>> crawlPaths = new ConcurrentLinkedQueue<List<Eventable>>();
+
+		for (Iterator<List<Integer>> crawlPahtIt = this.crawlPaths.iterator(); crawlPahtIt
+		        .hasNext();) {
+			List<Eventable> aCrawlPath = retrieveACrawlPahtFromDb(crawlPahtIt.next());
+
+			crawlPaths.add(aCrawlPath);
+
+		}
+
+		return crawlPaths;
+	}
+
+	private List<Eventable> retrieveACrawlPahtFromDb(List<Integer> crawlPahtCodes) {
+
+		List<Eventable> aCrawlPath = new ArrayList<Eventable>();
+
+		for (Integer edgeCode : crawlPahtCodes) {
+
+			Relationship relationship = getEdgeFromDB(edgeCode);
+			Node sourceNode = relationship.getStartNode();
+			Node endNode = relationship.getEndNode();
+
+			Eventable eventable = edgeToEventable(relationship);
+			eventable.setSource(nodeToState(sourceNode));
+			eventable.setTarget(nodeToState(endNode));
+			aCrawlPath.add(eventable);
+
+		}
+		return aCrawlPath;
+
+	}
+
+	private Relationship getEdgeFromDB(Integer edgeCode) {
+
+		Relationship r = null;
+		Transaction tx = sfgDb.beginTx();
+		try {
+
+			r =
+			        edgesIndex
+			                .get(SOURCE_CLICKABLE_TARGET_IN_EDGES_FOR_UNIQUE_INDEXING, edgeCode)
+			                .getSingle();
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+		return r;
+	}
+
+	private StateVertex getStateFromDB(int nodeHash) {
+
+		StateVertex state = null;
+		Transaction tx = sfgDb.beginTx();
+		try {
+
+			Node node = nodeIndex.get(NODES_INDEX_IN_THE_NODE_INDEX, nodeHash).getSingle();
+			state = nodeToState(node);
+			tx.success();
+		} finally {
+			tx.finish();
+		}
+		return state;
+	}
+
+	public int getCrawlPathsSize() {
+		int size = 0;
+
+		size = this.crawlPaths.size();
+		return size;
+	}
 }

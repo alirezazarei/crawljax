@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.crawljax.examples.experiments.graphdb.correctness;
+package com.crawljax.examples.experiments.graphdb;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import com.crawljax.core.CrawljaxException;
 import com.crawljax.core.CrawljaxRunner;
@@ -30,22 +31,38 @@ import com.google.common.collect.ImmutableSet;
  */
 public class CorrecnessExperiment {
 
+	private static final int MAX_TIME = 24 * 60;
 	private static int MAX_STATES = 50;
 	private static int MAX_DEPTH = 5;
 
+	/**
+	 * the folder to save the reports created by create report method
+	 */
 	private static String folder =
 	        "/ubc/ece/home/am/grads/azarei/work/Desktop/graph-db-experiemtns/correctness";
 
+	/**
+	 * sets the folder which reports will be saved in
+	 * 
+	 * @param folder
+	 */
 	public static void setFolder(String folder) {
 		CorrecnessExperiment.folder = folder;
 	}
+
+	/**
+	 * returns the folder in which reports will be saved
+	 * 
+	 * @return
+	 */
 
 	public static String getFolder() {
 		return folder;
 	}
 
-	public static void setMAX_DEPTH(int mAX_DEPTH) {
-		MAX_DEPTH = mAX_DEPTH;
+	public static void setMAX_DEPTH(int max)
+	{
+		MAX_DEPTH = max;
 	}
 
 	public static void setMaxState(int max) {
@@ -64,16 +81,6 @@ public class CorrecnessExperiment {
 
 		correctnessExperimentOn(url);
 
-		// correcnessExperimentOn("http://www.ece.ubc.ca/~azarei");
-		// correctnessExperimentOn("http://www.google.com");
-		// correcnessExperimentOn("file://localhost/Users/arz/localhost/applications/chess/index.html");
-		// correcnessExperimentOn("http://demo.crawljax.com");
-		// correctnessExperimentOn("http://localhost/applications/phormer331/");
-		// correctnessExperimentOn("http://localhost/applications/ajaxfilemanagerv_tinymce1.1/tinymce_test.php");
-		// correctnessExperimentOn("http://localhost/correcNess/pluginTestFirst.htm");
-		// correctnessExperimentOn("http://localhost/correctness/c4.htm");
-
-		// correctnessExperimentOn("http://demo.crawljax.com");
 	}
 
 	private static void correctnessExperimentOn(String uRL) {
@@ -81,10 +88,6 @@ public class CorrecnessExperiment {
 		InDatabaseStateFlowGraph inDbSfg = new InDatabaseStateFlowGraph(new ExitNotifier(0));
 		StateFlowGraph inMemorySfg = crawlInMemory(uRL);
 		InDatabaseStateFlowGraph.saveSfgInDatabase(inMemorySfg, inDbSfg);
-
-		// StateFlowGraph inMemorySfg2 = crawlInMemory(uRL);
-		// InDatabaseStateFlowGraph inDbSfg2 = new InDatabaseStateFlowGraph(new ExitNotifier(0));
-		// InDatabaseStateFlowGraph.saveSfgInDatabase(inMemorySfg2, inDbSfg2);
 
 		StateFlowGraph inDatabaseSfg = crawlInDb(uRL);
 
@@ -100,7 +103,7 @@ public class CorrecnessExperiment {
 		return inDatabaseSfg;
 	}
 
-	static StateFlowGraph crawlInMemory(String uRL) {
+	public static StateFlowGraph crawlInMemory(String uRL) {
 		CrawljaxConfiguration inMemoryConfiguration = buildInMemoryConfiguration(uRL);
 		CrawljaxRunner inMemoryCrawljax = new CrawljaxRunner(inMemoryConfiguration);
 		StateFlowGraph inMemorySfg = inMemoryCrawljax.call().getStateFlowGraph();
@@ -329,8 +332,10 @@ public class CorrecnessExperiment {
 
 		int maxStates = MAX_STATES;
 		int maxDepth = MAX_DEPTH;
+		int MaxTime = MAX_TIME;
 		builder.setMaximumStates(maxStates);
 		builder.setMaximumDepth(maxDepth);
+		builder.setMaximumRunTime(MaxTime, TimeUnit.MINUTES);
 
 		return builder;
 	}

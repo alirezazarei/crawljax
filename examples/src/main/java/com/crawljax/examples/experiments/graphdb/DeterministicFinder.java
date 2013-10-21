@@ -1,4 +1,4 @@
-package com.crawljax.examples.experiments.graphdb.correctness;
+package com.crawljax.examples.experiments.graphdb;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -138,15 +138,16 @@ public class DeterministicFinder {
 		urls.clear();
 
 		// /////////////////// det 50
+		urls.add("http://www.isc.org/downloads/BIND/");// states: 1
+		urls.add("http://hunyyoung.com/"); // det 1
+		urls.add("http://home.planet.nl/~mooij321/"); // states: 2
+		urls.add("http://www.antique-hangups.com/"); // states : 1
+		urls.add("http://www.project451.com/");// states : 3
+		urls.add("http://lmuwnmd.wpengine.com/wp-signup.php?new=www.techblog.com");// states : 1
+
 		urls.add("http://c-level.org/"); // det 50
 		urls.add("http://rprogress.org/index.htm");// det 50
 		urls.add("http://www.math.mcgill.ca/");// det 50
-		urls.add("http://www.isc.org/downloads/BIND/");// det 1
-		urls.add("http://hunyyoung.com/"); // det 1
-		urls.add("http://home.planet.nl/~mooij321/"); // det 2
-		urls.add("http://www.antique-hangups.com/"); // det 1
-		urls.add("http://www.project451.com/");// DET 3
-		urls.add("http://lmuwnmd.wpengine.com/wp-signup.php?new=www.techblog.com");// det 1
 
 		for (String uRL : urls) {
 

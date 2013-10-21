@@ -12,6 +12,9 @@ public class LargeFireFoxTestScalable extends LargeFirefoxTest {
 
 	@Override
 	StateFlowGraphType getGraphType() {
+		System.setProperty("webdriver.firefox.bin",
+		        "/ubc/ece/home/am/grads/azarei/firefox 7/firefox/firefox-bin");
+
 		return StateFlowGraphType.SCALABLE;
 	}
 

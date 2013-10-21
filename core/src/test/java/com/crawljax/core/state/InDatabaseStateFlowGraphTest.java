@@ -5,6 +5,10 @@ package com.crawljax.core.state;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import org.junit.Test;
 
 import com.crawljax.core.ExitNotifier;
@@ -146,6 +150,100 @@ public class InDatabaseStateFlowGraphTest extends StateFlowGraphTest {
 
 		assertTrue(inDbGraph.buildJgraphT().edgeSet().size() == numberOfEdges);
 
+	}
+
+	@Test
+	public void testWhenACrawlPathIsAddedTheNumberOfCrawlPathsIsIncreasesByOne() {
+
+		List<Eventable> path = createAPath();
+
+		((InDatabaseStateFlowGraph) graph).addCrawlPath(path);
+
+		assertTrue(((InDatabaseStateFlowGraph) graph).getCrawlPathsSize() == 1);
+
+	}
+
+	@Test
+	public void testWhenACrawlPathIsAddedAndThenRetrievedTheyAreTheSamee() {
+
+		List<Eventable> path = createAPath();
+
+		((InDatabaseStateFlowGraph) graph).addCrawlPath(path);
+
+		ConcurrentLinkedQueue<List<Eventable>> paths =
+		        (ConcurrentLinkedQueue<List<Eventable>>) ((InDatabaseStateFlowGraph) graph)
+		                .getCrawlPaths();
+
+		List<Eventable> retrievedPath = paths.peek();
+
+		assertTrue(retrievedPath.equals(path));
+
+	}
+
+	@Test
+	public void testWhenTwoCrawlPathAreAddedAndThenRetrievedTheyAreTheSame() {
+
+		List<Eventable> path1 = createAPath();
+		List<Eventable> path2 = createAnotherPath();
+
+		((InDatabaseStateFlowGraph) graph).addCrawlPath(path1);
+		((InDatabaseStateFlowGraph) graph).addCrawlPath(path2);
+
+		ConcurrentLinkedQueue<List<Eventable>> retrievedPaths =
+		        (ConcurrentLinkedQueue<List<Eventable>>) ((InDatabaseStateFlowGraph) graph)
+		                .getCrawlPaths();
+
+		assertTrue(retrievedPaths.contains(path1));
+		assertTrue(retrievedPaths.contains(path2));
+
+	}
+
+	private List<Eventable> createAPath() {
+
+		graph.putIfAbsent(state2);
+		graph.putIfAbsent(state3);
+		graph.putIfAbsent(state4);
+
+		Eventable e1 = newXpathEventable("/body/div[1]");
+		e1.setSource(index);
+		e1.setTarget(state2);
+		graph.addEdge(index, state2, e1);
+
+		Eventable e2 = newXpathEventable("/body/div[2]");
+		e2.setSource(state2);
+		e2.setTarget(state3);
+		graph.addEdge(state2, state3, e2);
+		Eventable e3 = newXpathEventable("/body/div[3]");
+		e3.setSource(state3);
+		e3.setTarget(state4);
+		graph.addEdge(state3, state4, e3);
+
+		List<Eventable> path = new ArrayList<Eventable>();
+		path.add(e1);
+		path.add(e2);
+		path.add(e3);
+
+		return path;
+	}
+
+	private List<Eventable> createAnotherPath() {
+
+		graph.putIfAbsent(state5);
+		Eventable e1 = newXpathEventable("/body/div[4]");
+		e1.setSource(state4);
+		e1.setTarget(state5);
+
+		graph.addEdge(state4, state5, e1);
+		Eventable e2 = newXpathEventable("/body/div[5]");
+		e2.setSource(state5);
+		e2.setTarget(index);
+
+		graph.addEdge(state5, index, e2);
+		List<Eventable> path = new ArrayList<Eventable>();
+		path.add(e1);
+		path.add(e2);
+
+		return path;
 	}
 
 }

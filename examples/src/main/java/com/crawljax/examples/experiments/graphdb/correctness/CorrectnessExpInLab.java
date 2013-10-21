@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.crawljax.core.state.StateFlowGraph;
+import com.crawljax.examples.experiments.graphdb.CorrecnessExperiment;
 
 public class CorrectnessExpInLab {
 
