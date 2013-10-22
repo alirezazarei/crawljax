@@ -17,8 +17,8 @@ public class CorrectnessMultipleBrowsers {
 		System.setProperty("webdriver.firefox.bin",
 		        "/ubc/ece/home/am/grads/azarei/firefox 7/firefox/firefox-bin");
 
-		CorrecnessExperiment.setMaxState(50);
-		CorrecnessExperiment.setMAX_DEPTH(5);
+		Experiment.setMaxState(50);
+		Experiment.setMAX_DEPTH(5);
 
 		List<String> urls = new ArrayList<String>();
 
@@ -62,11 +62,11 @@ public class CorrectnessMultipleBrowsers {
 
 			if (alreadyTestedUrls.contains(uRL) == false) {
 				try {
-					StateFlowGraph inMemorySfg2 = CorrecnessExperiment.crawlInMemory(uRL);
+					StateFlowGraph inMemorySfg2 = Experiment.crawlInMemory(uRL);
 
-					StateFlowGraph inMemorySfg = CorrecnessExperiment.crawlInMemory(uRL);
+					StateFlowGraph inMemorySfg = Experiment.crawlInMemory(uRL);
 
-					CorrecnessExperiment.createExperimentReport(inMemorySfg, inMemorySfg2, uRL);
+					Experiment.createExperimentReport(inMemorySfg, inMemorySfg2, uRL);
 				} catch (Exception e) {
 
 				}

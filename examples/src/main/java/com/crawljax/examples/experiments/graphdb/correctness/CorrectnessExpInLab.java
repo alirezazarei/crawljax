@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.crawljax.core.state.StateFlowGraph;
-import com.crawljax.examples.experiments.graphdb.CorrecnessExperiment;
+import com.crawljax.examples.experiments.graphdb.Experiment;
 
 public class CorrectnessExpInLab {
 
@@ -18,8 +18,8 @@ public class CorrectnessExpInLab {
 		System.setProperty("webdriver.firefox.bin",
 		        "/ubc/ece/home/am/grads/azarei/firefox 7/firefox/firefox-bin");
 
-		CorrecnessExperiment.setMaxState(15);
-		CorrecnessExperiment.setMAX_DEPTH(5);
+		Experiment.setMaxState(15);
+		Experiment.setMAX_DEPTH(5);
 
 		List<String> urls = new ArrayList<String>();
 
@@ -102,9 +102,9 @@ public class CorrectnessExpInLab {
 
 			if (alreadyTestedUrls.contains(uRL) == false) {
 				try {
-					StateFlowGraph inDbSfg = CorrecnessExperiment.crawlInDb(uRL);
-					StateFlowGraph inMemorySfg = CorrecnessExperiment.crawlInMemory(uRL);
-					CorrecnessExperiment.createExperimentReport(inMemorySfg, inDbSfg, uRL);
+					StateFlowGraph inDbSfg = Experiment.crawlInDb(uRL);
+					StateFlowGraph inMemorySfg = Experiment.crawlInMemory(uRL);
+					Experiment.createExperimentReport(inMemorySfg, inDbSfg, uRL);
 				} catch (Exception e) {
 
 				}
