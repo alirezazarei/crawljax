@@ -12,8 +12,8 @@ public class DeterministicFinder {
 	 */
 	public static void main(String[] args) {
 
-		CorrecnessExperiment.setMaxState(15);
-		CorrecnessExperiment.setMAX_DEPTH(5);
+		Experiment.setMaxState(15);
+		Experiment.setMAX_DEPTH(5);
 
 		List<String> urls = new ArrayList<String>();
 
@@ -31,9 +31,9 @@ public class DeterministicFinder {
 		for (String uRL : urls) {
 
 			try {
-				StateFlowGraph inMemorySfg = CorrecnessExperiment.crawlInMemory(uRL);
-				StateFlowGraph inMemorySfg2 = CorrecnessExperiment.crawlInMemory(uRL);
-				CorrecnessExperiment.createExperimentReport(inMemorySfg, inMemorySfg2, uRL);
+				StateFlowGraph inMemorySfg = Experiment.crawlInMemory(uRL);
+				StateFlowGraph inMemorySfg2 = Experiment.crawlInMemory(uRL);
+				Experiment.createExperimentReport(inMemorySfg, inMemorySfg2, uRL);
 			} catch (Exception e) {
 
 			}

@@ -32,8 +32,8 @@ public class MemoryExperiment {
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 
-		CorrecnessExperiment.setMaxState(MAX_STATES);
-		CorrecnessExperiment.setMAX_DEPTH(MAX_DEPTH);
+		Experiment.setMaxState(MAX_STATES);
+		Experiment.setMAX_DEPTH(MAX_DEPTH);
 
 		StringBuffer message = new StringBuffer();
 		StateFlowGraph sfg = null;
@@ -41,7 +41,7 @@ public class MemoryExperiment {
 
 		//sfg = CorrecnessExperiment.crawlInDb(URL);
 
-		sfg = CorrecnessExperiment.crawlInMemory(URL);
+		sfg = Experiment.crawlInMemory(URL);
 		} catch (Exception e) {
 			message.append(e).append("\n").append(e.getMessage()).append('\n');
 
