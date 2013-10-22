@@ -43,7 +43,7 @@ public class Experiment {
 	 */
 //	private static String folder = "/ubc/ece/home/am/grads/azarei/work/Desktop/graph-db-experiemtns/correctness";
 
-	private static String folder = "/Users/arz/Desktop/graph-db-experiemtns/correctness";
+	private static String folder = "/Users/fully-shared/thesis-project/results/correctness";
 	private static int BROWSERS_NUMBER =1;
 	
 	public static void setNumberOfBrowsers(int number){
