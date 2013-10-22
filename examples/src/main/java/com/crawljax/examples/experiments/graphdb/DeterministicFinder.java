@@ -14,11 +14,10 @@ public class DeterministicFinder {
 	 */
 	public static void main(String[] args) {
 
-		System.setProperty("webdriver.firefox.bin",
-		        "/ubc/ece/home/am/grads/azarei/firefox 7/firefox/firefox-bin");
+//		System.setProperty("webdriver.firefox.bin", "/ubc/ece/home/am/grads/azarei/firefox 7/firefox/firefox-bin");
 
-		CorrecnessExperiment.setMaxState(50);
-		CorrecnessExperiment.setMAX_DEPTH(5);
+		Experiment.setMaxState(50);
+		Experiment.setMAX_DEPTH(5);
 
 		List<String> urls = new ArrayList<String>();
 
@@ -152,14 +151,15 @@ public class DeterministicFinder {
 		for (String uRL : urls) {
 
 			if (alreadyTestedUrls.contains(uRL) == false) {
-				try {
-					StateFlowGraph inMemorySfg2 = CorrecnessExperiment.crawlInDb(uRL);
 
-					StateFlowGraph inMemorySfg = CorrecnessExperiment.crawlInMemory(uRL);
+			try {
+				StateFlowGraph inMemorySfg = Experiment.crawlInMemory(uRL);
+				StateFlowGraph inMemorySfg2 = Experiment.crawlInMemory(uRL);
+				Experiment.createExperimentReport(inMemorySfg, inMemorySfg2, uRL);
+			} catch (Exception e) {
 
-					CorrecnessExperiment.createExperimentReport(inMemorySfg, inMemorySfg2, uRL);
-				} catch (Exception e) {
 
+				
 				}
 			}
 		}

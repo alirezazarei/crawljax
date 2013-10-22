@@ -14,9 +14,11 @@ import java.nio.file.Files;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import com.crawljax.browser.EmbeddedBrowser.BrowserType;
 import com.crawljax.core.CrawljaxException;
 import com.crawljax.core.CrawljaxRunner;
 import com.crawljax.core.ExitNotifier;
+import com.crawljax.core.configuration.BrowserConfiguration;
 import com.crawljax.core.configuration.CrawljaxConfiguration;
 import com.crawljax.core.configuration.CrawljaxConfiguration.CrawljaxConfigurationBuilder;
 import com.crawljax.core.state.Eventable;
@@ -29,17 +31,29 @@ import com.google.common.collect.ImmutableSet;
 /**
  * @author arz
  */
-public class CorrecnessExperiment {
+public class Experiment {
 
 	private static final int MAX_TIME = 24 * 60;
 	private static int MAX_STATES = 50;
 	private static int MAX_DEPTH = 5;
 
+
 	/**
 	 * the folder to save the reports created by create report method
 	 */
-	private static String folder =
-	        "/ubc/ece/home/am/grads/azarei/work/Desktop/graph-db-experiemtns/correctness";
+//	private static String folder = "/ubc/ece/home/am/grads/azarei/work/Desktop/graph-db-experiemtns/correctness";
+
+	private static String folder = "/Users/arz/Desktop/graph-db-experiemtns/correctness";
+	private static int BROWSERS_NUMBER =1;
+	
+	public static void setNumberOfBrowsers(int number){
+		Experiment.BROWSERS_NUMBER = number;
+	}
+	
+	public static int getNumberOfBrowsers(){
+		return Experiment.BROWSERS_NUMBER ;
+	}
+
 
 	/**
 	 * sets the folder which reports will be saved in
@@ -47,7 +61,7 @@ public class CorrecnessExperiment {
 	 * @param folder
 	 */
 	public static void setFolder(String folder) {
-		CorrecnessExperiment.folder = folder;
+		Experiment.folder = folder;
 	}
 
 	/**
@@ -336,6 +350,9 @@ public class CorrecnessExperiment {
 		builder.setMaximumStates(maxStates);
 		builder.setMaximumDepth(maxDepth);
 		builder.setMaximumRunTime(MaxTime, TimeUnit.MINUTES);
+		
+		builder.setBrowserConfig( new BrowserConfiguration(BrowserType.firefox, BROWSERS_NUMBER ));
+		
 
 		return builder;
 	}

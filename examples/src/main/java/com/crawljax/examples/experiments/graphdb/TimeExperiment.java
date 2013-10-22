@@ -33,9 +33,9 @@ public class TimeExperiment {
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
 
-		CorrecnessExperiment.setMaxState(MAX_STATES);
+		Experiment.setMaxState(MAX_STATES);
 		LOG.info("Max_state set to {}",MAX_STATES);
-		CorrecnessExperiment.setMAX_DEPTH(MAX_DEPTH);
+		Experiment.setMAX_DEPTH(MAX_DEPTH);
 		LOG.info("max_dpeth is set to {}",MAX_DEPTH);
 		LOG.info("URL: {}",URL);
 		StringBuffer message = new StringBuffer();
@@ -44,7 +44,7 @@ public class TimeExperiment {
 
 		// sfg = CorrecnessExperiment.crawlInDb(URL);
 
-		sfg = CorrecnessExperiment.crawlInMemory(URL);
+		sfg = Experiment.crawlInMemory(URL);
 		} catch (Exception e) {
 			message.append(e).append("\n").append(e.getMessage()).append('\n');
 
